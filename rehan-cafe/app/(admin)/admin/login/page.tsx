@@ -10,7 +10,7 @@ export default function AdminLoginPage() {
   const { login, isLoading, error } = useAuthStore()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [showHint, setShowHint] = useState(false)
+  const [showHint, setShowHint] = useState(true)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -99,20 +99,28 @@ export default function AdminLoginPage() {
             </form>
 
             {/* Demo accounts */}
-            <div className="mt-6">
-              <button onClick={() => setShowHint(!showHint)} className="text-cafe-muted text-xs hover:text-espresso-light transition-colors">
-                {showHint ? '▲ Sembunyikan' : '▼ Lihat akun demo'}
-              </button>
+            <div className="mt-6 border-t border-white/10 pt-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold text-espresso-light uppercase tracking-wider">Akun Demo — Klik untuk Login</p>
+                <button onClick={() => setShowHint(!showHint)} className="text-cafe-muted text-[10px] hover:text-espresso-light transition-colors">
+                  {showHint ? 'Sembunyikan' : 'Tampilkan'}
+                </button>
+              </div>
               {showHint && (
-                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mt-3 space-y-1.5 max-h-48 overflow-y-auto">
-                  {mockCredentials.map((c) => (
+                <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                  {mockCredentials.filter(c => c.user.role !== 'member').map((c) => (
                     <button
                       key={c.email}
                       onClick={() => { setEmail(c.email); setPassword(c.password) }}
-                      className="w-full flex justify-between items-center px-3 py-2 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-left"
+                      className="w-full flex items-center justify-between px-3 py-2.5 bg-white/5 hover:bg-white/12 border border-white/8 hover:border-espresso-light/30 rounded-xl transition-all text-left group"
                     >
-                      <span className="text-warm-white/70 text-xs">{c.user.name}</span>
-                      <span className="text-cafe-muted text-[10px] capitalize">{c.user.role.replace('_', ' ')}</span>
+                      <div>
+                        <p className="text-warm-white/90 text-xs font-semibold group-hover:text-warm-white transition-colors">{c.user.name}</p>
+                        <p className="text-cafe-muted text-[10px] mt-0.5">{c.email}</p>
+                      </div>
+                      <span className="text-[9px] font-bold px-2 py-1 rounded-lg bg-espresso-light/15 text-espresso-light capitalize flex-shrink-0">
+                        {c.user.role.replace('_', ' ')}
+                      </span>
                     </button>
                   ))}
                 </motion.div>

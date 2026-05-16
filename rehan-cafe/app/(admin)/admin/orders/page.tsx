@@ -33,6 +33,27 @@ export default function OrdersPage() {
     <div className="min-h-screen">
       <AdminHeader title="Orders" subtitle={`${orders.length} total order`} />
       <div className="p-6">
+        {/* Customer Menu Link */}
+        <div className="mb-5 flex items-center justify-between bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3.5">
+          <div>
+            <p className="text-sm font-bold text-amber-900">Menu Digital Customer (via QR Meja)</p>
+            <p className="text-xs text-amber-700 mt-0.5">Bagikan link ini ke pelanggan atau scan QR di meja</p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0 ml-4">
+            {[1, 2, 3].map((n) => (
+              <a
+                key={n}
+                href={`${typeof window !== 'undefined' ? window.location.origin : ''}/table/table-${n}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 bg-amber-800 hover:bg-amber-900 text-warm-white text-xs font-bold px-3 py-2 rounded-xl transition-colors"
+              >
+                🪑 Meja {n}
+              </a>
+            ))}
+          </div>
+        </div>
+
         {/* Filter */}
         <div className="flex gap-2 mb-5 overflow-x-auto scrollbar-hide pb-1">
           {['all', 'pending', 'confirmed', 'preparing', 'ready', 'completed', 'cancelled'].map((s) => (
