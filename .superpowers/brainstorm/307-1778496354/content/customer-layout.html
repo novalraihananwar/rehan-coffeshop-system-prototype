@@ -1,0 +1,160 @@
+<h2>Layout Halaman Menu — Customer Side</h2>
+<p class="subtitle">Bagaimana tampilan utama menu saat customer buka di HP setelah scan QR?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="hero-scroll" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #F5EDD8; padding: 16px; min-height: 220px; display: flex; gap: 10px;">
+      <!-- Phone mockup A -->
+      <div style="flex:1; background: #FFFAF4; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(107,66,38,0.15); display: flex; flex-direction: column;">
+        <!-- top bar -->
+        <div style="background: linear-gradient(180deg, #D4A96A 0%, #F5EDD8 100%); height: 80px; padding: 12px; display: flex; flex-direction: column; justify-content: flex-end;">
+          <div style="font-size: 9px; font-weight: 700; color: #3D2314; letter-spacing: 1px;">REHAN CAFE</div>
+          <div style="font-size: 7px; color: #7A5235;">Meja 12 · Dine In</div>
+        </div>
+        <!-- category tabs -->
+        <div style="display: flex; gap: 4px; padding: 8px; border-bottom: 1px solid #EDE0CC; overflow: hidden;">
+          <div style="background: #6B4226; border-radius: 20px; padding: 3px 8px; font-size: 7px; color: white; white-space: nowrap;">☕ Kopi</div>
+          <div style="background: #F0E6D3; border-radius: 20px; padding: 3px 8px; font-size: 7px; color: #8B6240; white-space: nowrap;">🍵 Non-Kopi</div>
+          <div style="background: #F0E6D3; border-radius: 20px; padding: 3px 8px; font-size: 7px; color: #8B6240; white-space: nowrap;">🍝 Makanan</div>
+        </div>
+        <!-- menu cards vertical -->
+        <div style="padding: 8px; display: flex; flex-direction: column; gap: 6px; flex:1;">
+          <div style="display: flex; gap: 6px; background: white; border-radius: 10px; padding: 6px; box-shadow: 0 1px 6px rgba(107,66,38,0.08);">
+            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #D4A96A, #8B6240); border-radius: 8px; flex-shrink: 0;"></div>
+            <div style="flex:1;">
+              <div style="font-size: 8px; font-weight: 600; color: #3D2314;">Caramel Latte</div>
+              <div style="font-size: 7px; color: #A08060;">Espresso · Caramel</div>
+              <div style="font-size: 8px; font-weight: 700; color: #6B4226; margin-top: 2px;">Rp 38.000</div>
+            </div>
+            <div style="width: 20px; height: 20px; background: #6B4226; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; flex-shrink: 0; margin-top: auto; margin-bottom: auto;">+</div>
+          </div>
+          <div style="display: flex; gap: 6px; background: white; border-radius: 10px; padding: 6px; box-shadow: 0 1px 6px rgba(107,66,38,0.08);">
+            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #C4956A, #6B4226); border-radius: 8px; flex-shrink: 0;"></div>
+            <div style="flex:1;">
+              <div style="font-size: 8px; font-weight: 600; color: #3D2314;">Spanish Latte</div>
+              <div style="font-size: 7px; color: #A08060;">Double Shot</div>
+              <div style="font-size: 8px; font-weight: 700; color: #6B4226; margin-top: 2px;">Rp 42.000</div>
+            </div>
+            <div style="width: 20px; height: 20px; background: #6B4226; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; color: white; flex-shrink: 0; margin-top: auto; margin-bottom: auto;">+</div>
+          </div>
+        </div>
+        <!-- bottom cart -->
+        <div style="background: #6B4226; padding: 8px 10px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 7px; color: rgba(255,255,255,0.8);">2 item · Rp 80.000</div>
+          <div style="font-size: 7px; font-weight: 700; color: white;">Lihat Keranjang →</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — List Scroll</h3>
+      <p>Menu vertikal dengan foto kecil, nama, harga, dan tombol tambah. Category tab di atas. Sticky cart bar di bawah. <strong>Paling cepat di-browse</strong>, seperti GoFood/GrabFood premium.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="grid-photo" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #F5EDD8; padding: 16px; min-height: 220px; display: flex; gap: 10px;">
+      <div style="flex:1; background: #FFFAF4; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(107,66,38,0.15); display: flex; flex-direction: column;">
+        <div style="background: linear-gradient(180deg, #D4A96A 0%, #F5EDD8 100%); height: 60px; padding: 10px 12px; display: flex; align-items: flex-end;">
+          <div>
+            <div style="font-size: 9px; font-weight: 700; color: #3D2314;">REHAN CAFE</div>
+            <div style="font-size: 7px; color: #7A5235;">Meja 12</div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 4px; padding: 6px 8px; overflow: hidden;">
+          <div style="background: #6B4226; border-radius: 20px; padding: 2px 7px; font-size: 6px; color: white;">Semua</div>
+          <div style="background: #F0E6D3; border-radius: 20px; padding: 2px 7px; font-size: 6px; color: #8B6240;">Kopi</div>
+          <div style="background: #F0E6D3; border-radius: 20px; padding: 2px 7px; font-size: 6px; color: #8B6240;">Non-Kopi</div>
+        </div>
+        <!-- grid 2 col -->
+        <div style="padding: 6px 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; flex:1;">
+          <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(107,66,38,0.08);">
+            <div style="height: 52px; background: linear-gradient(135deg, #D4A96A, #8B6240);"></div>
+            <div style="padding: 5px;">
+              <div style="font-size: 7px; font-weight: 600; color: #3D2314;">Caramel Latte</div>
+              <div style="font-size: 7px; color: #6B4226; font-weight: 700; margin-top: 2px;">Rp 38.000</div>
+              <div style="background: #6B4226; border-radius: 6px; padding: 3px; text-align: center; font-size: 6px; color: white; margin-top: 4px;">+ Tambah</div>
+            </div>
+          </div>
+          <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(107,66,38,0.08);">
+            <div style="height: 52px; background: linear-gradient(135deg, #C4956A, #6B4226);"></div>
+            <div style="padding: 5px;">
+              <div style="font-size: 7px; font-weight: 600; color: #3D2314;">Spanish Latte</div>
+              <div style="font-size: 7px; color: #6B4226; font-weight: 700; margin-top: 2px;">Rp 42.000</div>
+              <div style="background: #6B4226; border-radius: 6px; padding: 3px; text-align: center; font-size: 6px; color: white; margin-top: 4px;">+ Tambah</div>
+            </div>
+          </div>
+          <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(107,66,38,0.08);">
+            <div style="height: 52px; background: linear-gradient(135deg, #8B9E7A, #5C6B52);"></div>
+            <div style="padding: 5px;">
+              <div style="font-size: 7px; font-weight: 600; color: #3D2314;">Matcha Latte</div>
+              <div style="font-size: 7px; color: #6B4226; font-weight: 700; margin-top: 2px;">Rp 40.000</div>
+              <div style="background: #6B4226; border-radius: 6px; padding: 3px; text-align: center; font-size: 6px; color: white; margin-top: 4px;">+ Tambah</div>
+            </div>
+          </div>
+          <div style="background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 6px rgba(107,66,38,0.08);">
+            <div style="height: 52px; background: linear-gradient(135deg, #D4956A, #8B4A26);"></div>
+            <div style="padding: 5px;">
+              <div style="font-size: 7px; font-weight: 600; color: #3D2314;">Affogato</div>
+              <div style="font-size: 7px; color: #6B4226; font-weight: 700; margin-top: 2px;">Rp 45.000</div>
+              <div style="background: #6B4226; border-radius: 6px; padding: 3px; text-align: center; font-size: 6px; color: white; margin-top: 4px;">+ Tambah</div>
+            </div>
+          </div>
+        </div>
+        <div style="background: #6B4226; padding: 7px 10px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 7px; color: rgba(255,255,255,0.8);">2 item</div>
+          <div style="font-size: 7px; font-weight: 700; color: white;">Keranjang →</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Grid Foto</h3>
+      <p>Menu 2 kolom dengan foto besar mendominasi. Visual sangat aesthetic dan Instagramable. <strong>Lebih lambat di-browse</strong> tapi terasa premium seperti app kafe viral.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="hero-featured" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #F5EDD8; padding: 16px; min-height: 220px; display: flex; gap: 10px;">
+      <div style="flex:1; background: #FFFAF4; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(107,66,38,0.15); display: flex; flex-direction: column;">
+        <!-- hero banner featured -->
+        <div style="background: linear-gradient(135deg, #3D2314 0%, #6B4226 60%, #D4A96A 100%); height: 85px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div style="font-size: 9px; font-weight: 700; color: #F5EDD8; letter-spacing: 1px;">REHAN CAFE · Meja 12</div>
+          <div>
+            <div style="font-size: 8px; color: #D4A96A; text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Featured Today</div>
+            <div style="font-size: 12px; font-weight: 800; color: white;">Butterscotch Latte</div>
+            <div style="font-size: 7px; color: rgba(255,255,255,0.7);">Rp 40.000 · Limited Edition</div>
+          </div>
+        </div>
+        <!-- categories horizontal scroll -->
+        <div style="display: flex; gap: 4px; padding: 6px 8px; background: white; border-bottom: 1px solid #F0E6D3;">
+          <div style="background: #6B4226; border-radius: 20px; padding: 3px 8px; font-size: 6px; color: white; white-space: nowrap;">☕ Kopi</div>
+          <div style="background: #F0E6D3; border-radius: 20px; padding: 3px 8px; font-size: 6px; color: #8B6240; white-space: nowrap;">🍵 Non-Kopi</div>
+          <div style="background: #F0E6D3; border-radius: 20px; padding: 3px 8px; font-size: 6px; color: #8B6240; white-space: nowrap;">🍝 Makanan</div>
+        </div>
+        <!-- mix: featured big + list -->
+        <div style="padding: 6px 8px; flex:1; display: flex; flex-direction: column; gap: 5px;">
+          <div style="font-size: 7px; font-weight: 700; color: #3D2314; text-transform: uppercase; letter-spacing: 0.5px;">Paling Laris</div>
+          <div style="display: flex; gap: 6px; background: white; border-radius: 10px; padding: 6px; box-shadow: 0 1px 6px rgba(107,66,38,0.08);">
+            <div style="width: 38px; height: 38px; background: linear-gradient(135deg, #D4A96A, #8B6240); border-radius: 8px; flex-shrink: 0;"></div>
+            <div style="flex:1;"><div style="font-size: 7px; font-weight: 600; color: #3D2314;">Caramel Latte</div><div style="font-size: 7px; color: #6B4226; font-weight: 700; margin-top: 2px;">Rp 38.000</div></div>
+            <div style="width: 18px; height: 18px; background: #6B4226; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: white;">+</div>
+          </div>
+          <div style="display: flex; gap: 6px; background: white; border-radius: 10px; padding: 6px; box-shadow: 0 1px 6px rgba(107,66,38,0.08);">
+            <div style="width: 38px; height: 38px; background: linear-gradient(135deg, #C4956A, #6B4226); border-radius: 8px; flex-shrink: 0;"></div>
+            <div style="flex:1;"><div style="font-size: 7px; font-weight: 600; color: #3D2314;">Spanish Latte</div><div style="font-size: 7px; color: #6B4226; font-weight: 700; margin-top: 2px;">Rp 42.000</div></div>
+            <div style="width: 18px; height: 18px; background: #6B4226; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: white;">+</div>
+          </div>
+        </div>
+        <div style="background: #6B4226; padding: 7px 10px; display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-size: 7px; color: rgba(255,255,255,0.8);">2 item · Rp 80.000</div>
+          <div style="font-size: 7px; font-weight: 700; color: white;">Keranjang →</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Hero + Featured</h3>
+      <p>Banner hero di atas dengan menu unggulan/promo, lalu list di bawah. <strong>Paling cinematic</strong>, seperti app startup F&B premium. Bisa highlight menu spesial hari ini.</p>
+    </div>
+  </div>
+
+</div>

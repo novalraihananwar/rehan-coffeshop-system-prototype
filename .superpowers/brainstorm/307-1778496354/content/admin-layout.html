@@ -1,0 +1,192 @@
+<h2>Layout Admin Dashboard</h2>
+<p class="subtitle">Bagaimana struktur utama halaman admin yang dipakai owner & staff setiap hari?</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="sidebar-classic" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #F5EDD8; padding: 14px; min-height: 200px;">
+      <div style="background: #FFFAF4; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(107,66,38,0.15); display: flex; height: 160px;">
+        <!-- sidebar -->
+        <div style="width: 52px; background: #3D2314; display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; flex-shrink: 0;">
+          <div style="width: 28px; height: 28px; background: #D4A96A; border-radius: 8px; margin-bottom: 4px;"></div>
+          <div style="width: 28px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px;"></div>
+          <div style="width: 28px; height: 4px; background: #D4A96A; border-radius: 2px;"></div>
+          <div style="width: 28px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px;"></div>
+          <div style="width: 28px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px;"></div>
+          <div style="width: 28px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px;"></div>
+          <div style="width: 28px; height: 4px; background: rgba(255,255,255,0.15); border-radius: 2px;"></div>
+        </div>
+        <!-- main content -->
+        <div style="flex:1; padding: 10px; display: flex; flex-direction: column; gap: 6px; overflow: hidden;">
+          <!-- top bar -->
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 8px; font-weight: 700; color: #3D2314;">Overview — Hari Ini</div>
+            <div style="background: #F0E6D3; border-radius: 6px; padding: 3px 8px; font-size: 7px; color: #6B4226;">Cabang Utama ▾</div>
+          </div>
+          <!-- stat cards -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+            <div style="background: #3D2314; border-radius: 8px; padding: 7px;">
+              <div style="font-size: 6px; color: rgba(255,255,255,0.6);">Pendapatan</div>
+              <div style="font-size: 10px; font-weight: 700; color: #D4A96A;">4.2jt</div>
+            </div>
+            <div style="background: white; border-radius: 8px; padding: 7px; border: 1px solid #F0E6D3;">
+              <div style="font-size: 6px; color: #A08060;">Orders</div>
+              <div style="font-size: 10px; font-weight: 700; color: #3D2314;">87</div>
+            </div>
+            <div style="background: white; border-radius: 8px; padding: 7px; border: 1px solid #F0E6D3;">
+              <div style="font-size: 6px; color: #A08060;">Meja Aktif</div>
+              <div style="font-size: 10px; font-weight: 700; color: #3D2314;">24</div>
+            </div>
+          </div>
+          <!-- chart placeholder -->
+          <div style="background: white; border-radius: 8px; padding: 8px; border: 1px solid #F0E6D3; flex:1;">
+            <div style="font-size: 6px; color: #A08060; margin-bottom: 4px;">Grafik Penjualan Realtime</div>
+            <div style="display: flex; align-items: flex-end; gap: 3px; height: 40px;">
+              <div style="flex:1; background: #F0E6D3; border-radius: 2px; height: 30%;"></div>
+              <div style="flex:1; background: #D4B896; border-radius: 2px; height: 55%;"></div>
+              <div style="flex:1; background: #D4B896; border-radius: 2px; height: 40%;"></div>
+              <div style="flex:1; background: #D4B896; border-radius: 2px; height: 70%;"></div>
+              <div style="flex:1; background: #6B4226; border-radius: 2px; height: 100%;"></div>
+              <div style="flex:1; background: #D4B896; border-radius: 2px; height: 80%;"></div>
+              <div style="flex:1; background: #F0E6D3; border-radius: 2px; height: 45%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Sidebar Klasik</h3>
+      <p>Sidebar icon kiri (gelap/espresso) + konten utama kanan. Pola Stripe/Notion/Shopify. <strong>Paling familiar</strong> untuk staff, navigasi cepat, bekerja baik di desktop & tablet.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="top-nav" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #F5EDD8; padding: 14px; min-height: 200px;">
+      <div style="background: #FFFAF4; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(107,66,38,0.15); height: 160px; display: flex; flex-direction: column;">
+        <!-- top nav -->
+        <div style="background: #3D2314; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+          <div style="font-size: 8px; font-weight: 700; color: #D4A96A; letter-spacing: 1px;">REHAN ADMIN</div>
+          <div style="display: flex; gap: 10px;">
+            <div style="font-size: 6px; color: #D4A96A; font-weight: 600; border-bottom: 1px solid #D4A96A; padding-bottom: 2px;">Dashboard</div>
+            <div style="font-size: 6px; color: rgba(255,255,255,0.5);">Orders</div>
+            <div style="font-size: 6px; color: rgba(255,255,255,0.5);">Menu</div>
+            <div style="font-size: 6px; color: rgba(255,255,255,0.5);">Inventori</div>
+            <div style="font-size: 6px; color: rgba(255,255,255,0.5);">Laporan</div>
+          </div>
+          <div style="background: #D4A96A; border-radius: 4px; padding: 2px 6px; font-size: 6px; color: #3D2314; font-weight: 700;">Cabang Utama ▾</div>
+        </div>
+        <!-- content -->
+        <div style="flex:1; padding: 10px; display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 5px;">
+            <div style="background: #3D2314; border-radius: 8px; padding: 7px; text-align: center;">
+              <div style="font-size: 6px; color: rgba(255,255,255,0.6);">Pendapatan</div>
+              <div style="font-size: 9px; font-weight: 700; color: #D4A96A;">4.2jt</div>
+            </div>
+            <div style="background: white; border-radius: 8px; padding: 7px; text-align: center; border: 1px solid #F0E6D3;">
+              <div style="font-size: 6px; color: #A08060;">Orders</div>
+              <div style="font-size: 9px; font-weight: 700; color: #3D2314;">87</div>
+            </div>
+            <div style="background: white; border-radius: 8px; padding: 7px; text-align: center; border: 1px solid #F0E6D3;">
+              <div style="font-size: 6px; color: #A08060;">Meja Aktif</div>
+              <div style="font-size: 9px; font-weight: 700; color: #3D2314;">24</div>
+            </div>
+            <div style="background: white; border-radius: 8px; padding: 7px; text-align: center; border: 1px solid #F0E6D3;">
+              <div style="font-size: 6px; color: #A08060;">Customer</div>
+              <div style="font-size: 9px; font-weight: 700; color: #3D2314;">312</div>
+            </div>
+          </div>
+          <!-- 2 col -->
+          <div style="display: flex; gap: 6px; flex:1;">
+            <div style="flex:2; background: white; border-radius: 8px; padding: 8px; border: 1px solid #F0E6D3;">
+              <div style="font-size: 6px; color: #A08060; margin-bottom: 4px;">Grafik Penjualan</div>
+              <div style="display: flex; align-items: flex-end; gap: 2px; height: 45px;">
+                <div style="flex:1; background: #F0E6D3; border-radius: 2px; height: 30%;"></div>
+                <div style="flex:1; background: #D4B896; border-radius: 2px; height: 55%;"></div>
+                <div style="flex:1; background: #D4B896; border-radius: 2px; height: 70%;"></div>
+                <div style="flex:1; background: #6B4226; border-radius: 2px; height: 100%;"></div>
+                <div style="flex:1; background: #D4B896; border-radius: 2px; height: 80%;"></div>
+                <div style="flex:1; background: #F0E6D3; border-radius: 2px; height: 45%;"></div>
+              </div>
+            </div>
+            <div style="flex:1; background: white; border-radius: 8px; padding: 8px; border: 1px solid #F0E6D3;">
+              <div style="font-size: 6px; color: #A08060; margin-bottom: 4px;">Menu Terlaris</div>
+              <div style="font-size: 6px; color: #3D2314; font-weight: 600; margin: 2px 0;">1. Caramel Latte</div>
+              <div style="font-size: 6px; color: #3D2314; margin: 2px 0;">2. Spanish Latte</div>
+              <div style="font-size: 6px; color: #3D2314; margin: 2px 0;">3. Truffle Fries</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Top Navigation</h3>
+      <p>Navbar horizontal di atas (dark espresso) + konten penuh di bawah. Lebih banyak ruang layar untuk data. <strong>Cocok untuk tablet & laptop</strong>. Terasa seperti SaaS modern.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="sidebar-wide" onclick="toggleSelect(this)">
+    <div class="card-image" style="background: #F5EDD8; padding: 14px; min-height: 200px;">
+      <div style="background: #FFFAF4; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(107,66,38,0.15); display: flex; height: 160px;">
+        <!-- wide sidebar -->
+        <div style="width: 80px; background: linear-gradient(180deg, #2A1608 0%, #3D2314 100%); padding: 10px 8px; display: flex; flex-direction: column; gap: 2px; flex-shrink: 0;">
+          <div style="font-size: 7px; font-weight: 700; color: #D4A96A; letter-spacing: 1px; margin-bottom: 6px; text-align: center;">REHAN</div>
+          <div style="background: rgba(212,169,106,0.2); border-radius: 6px; padding: 4px 6px;">
+            <div style="font-size: 6px; color: #D4A96A; font-weight: 600;">📊 Dashboard</div>
+          </div>
+          <div style="padding: 4px 6px;">
+            <div style="font-size: 6px; color: rgba(255,255,255,0.5);">🛒 Orders</div>
+          </div>
+          <div style="padding: 4px 6px;">
+            <div style="font-size: 6px; color: rgba(255,255,255,0.5);">🍽️ Menu</div>
+          </div>
+          <div style="padding: 4px 6px;">
+            <div style="font-size: 6px; color: rgba(255,255,255,0.5);">🪑 Meja</div>
+          </div>
+          <div style="padding: 4px 6px;">
+            <div style="font-size: 6px; color: rgba(255,255,255,0.5);">📦 Inventori</div>
+          </div>
+          <div style="padding: 4px 6px;">
+            <div style="font-size: 6px; color: rgba(255,255,255,0.5);">👥 Staff</div>
+          </div>
+          <div style="margin-top: auto; padding: 4px 6px; background: rgba(255,255,255,0.05); border-radius: 6px;">
+            <div style="font-size: 6px; color: rgba(255,255,255,0.4);">Cabang Utama ▾</div>
+          </div>
+        </div>
+        <!-- main -->
+        <div style="flex:1; padding: 10px; display: flex; flex-direction: column; gap: 5px; overflow: hidden;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 8px; font-weight: 700; color: #3D2314;">Overview Hari Ini</div>
+            <div style="font-size: 6px; color: #A08060;">Minggu, 11 Mei 2026</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+            <div style="background: #3D2314; border-radius: 8px; padding: 8px;">
+              <div style="font-size: 6px; color: rgba(255,255,255,0.6);">Total Pendapatan</div>
+              <div style="font-size: 11px; font-weight: 700; color: #D4A96A;">Rp 4.2jt</div>
+            </div>
+            <div style="background: white; border-radius: 8px; padding: 8px; border: 1px solid #F0E6D3;">
+              <div style="font-size: 6px; color: #A08060;">Total Orders</div>
+              <div style="font-size: 11px; font-weight: 700; color: #3D2314;">87</div>
+            </div>
+          </div>
+          <div style="background: white; border-radius: 8px; padding: 8px; border: 1px solid #F0E6D3; flex:1;">
+            <div style="font-size: 6px; color: #A08060; margin-bottom: 4px;">Penjualan Per Jam</div>
+            <div style="display: flex; align-items: flex-end; gap: 2px; height: 40px;">
+              <div style="flex:1; background: #F0E6D3; border-radius: 2px; height: 20%;"></div>
+              <div style="flex:1; background: #D4B896; border-radius: 2px; height: 40%;"></div>
+              <div style="flex:1; background: #D4B896; border-radius: 2px; height: 60%;"></div>
+              <div style="flex:1; background: #6B4226; border-radius: 2px; height: 100%;"></div>
+              <div style="flex:1; background: #D4B896; border-radius: 2px; height: 85%;"></div>
+              <div style="flex:1; background: #D4B896; border-radius: 2px; height: 65%;"></div>
+              <div style="flex:1; background: #F0E6D3; border-radius: 2px; height: 35%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Sidebar Lebar + Label</h3>
+      <p>Sidebar lebar dengan icon + teks navigasi, gradient gelap, konten di kanan. <strong>Paling mudah dioperasikan staff</strong> karena menu jelas terbaca, seperti Linear/Vercel dashboard.</p>
+    </div>
+  </div>
+
+</div>
