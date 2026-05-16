@@ -43,7 +43,7 @@ export default function OrdersPage() {
             {[1, 2, 3].map((n) => (
               <a
                 key={n}
-                href={`${typeof window !== 'undefined' ? window.location.origin : ''}/table/table-${n}`}
+                href={`/table/table-${n}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 bg-amber-800 hover:bg-amber-900 text-warm-white text-xs font-bold px-3 py-2 rounded-xl transition-colors"
