@@ -1,0 +1,28 @@
+export const formatRupiah = (amount: number): string =>
+  `Rp ${amount.toLocaleString('id-ID')}`
+
+export const formatDate = (date: Date): string =>
+  new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(date)
+
+export const formatDateTime = (date: Date): string =>
+  new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(date)
+
+export const formatTime = (date: Date): string =>
+  new Intl.DateTimeFormat('id-ID', { timeStyle: 'short' }).format(date)
+
+export const formatMinutes = (minutes: number): string => {
+  if (minutes < 60) return `${minutes} menit`
+  const h = Math.floor(minutes / 60)
+  const m = minutes % 60
+  return m > 0 ? `${h}j ${m}m` : `${h} jam`
+}
+
+export const generateOrderNumber = (): string => {
+  const letters = 'ABCDE'
+  const letter = letters[Math.floor(Math.random() * letters.length)]
+  const number = String(Math.floor(Math.random() * 900) + 100)
+  return `${letter}-${number}`
+}
+
+export const generateId = (prefix: string = 'id'): string =>
+  `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`
