@@ -1,14 +1,26 @@
 export const formatRupiah = (amount: number): string =>
   `Rp ${amount.toLocaleString('id-ID')}`
 
-export const formatDate = (date: Date | string): string =>
-  new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(new Date(date))
+const toDate = (date: Date | string | null | undefined): Date | null => {
+  if (!date) return null
+  const d = new Date(date)
+  return isNaN(d.getTime()) ? null : d
+}
 
-export const formatDateTime = (date: Date | string): string =>
-  new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(date))
+export const formatDate = (date: Date | string | null | undefined): string => {
+  const d = toDate(date)
+  return d ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(d) : '-'
+}
 
-export const formatTime = (date: Date | string): string =>
-  new Intl.DateTimeFormat('id-ID', { timeStyle: 'short' }).format(new Date(date))
+export const formatDateTime = (date: Date | string | null | undefined): string => {
+  const d = toDate(date)
+  return d ? new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short' }).format(d) : '-'
+}
+
+export const formatTime = (date: Date | string | null | undefined): string => {
+  const d = toDate(date)
+  return d ? new Intl.DateTimeFormat('id-ID', { timeStyle: 'short' }).format(d) : '-'
+}
 
 export const formatMinutes = (minutes: number): string => {
   if (minutes < 60) return `${minutes} menit`
