@@ -128,6 +128,26 @@ export default function ReservationPage() {
 
     setLoading(false)
     if (rsvErr || ordErr) { setError('Gagal menyimpan. Coba lagi.'); return }
+
+    // Send WhatsApp confirmation if phone provided
+    if (phone) {
+      fetch('/api/send-wa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'confirmation',
+          phone,
+          name,
+          table: selectedTable,
+          date,
+          time,
+          guests,
+          total: totalSpend,
+          items: cart.map((c) => ({ name: `${c.item.name} (${c.size}) x${c.qty}`, price: c.item.prices[c.size] * c.qty })),
+        }),
+      }).catch(() => {}) // Non-blocking, don't fail reservation if WA fails
+    }
+
     setStep(4)
   }
 
