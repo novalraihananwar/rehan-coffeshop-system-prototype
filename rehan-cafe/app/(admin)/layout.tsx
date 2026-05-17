@@ -1,5 +1,5 @@
 'use client'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/auth.store'
 import Sidebar from '@/components/admin/Sidebar'
@@ -8,14 +8,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { user } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
+  const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    if (!user && pathname !== '/admin/login') {
+    setHydrated(true)
+  }, [])
+
+  useEffect(() => {
+    if (hydrated && !user && pathname !== '/admin/login') {
       router.push('/admin/login')
     }
-  }, [user, pathname, router])
+  }, [hydrated, user, pathname, router])
 
   if (pathname === '/admin/login') return <>{children}</>
+  if (!hydrated) return null
   if (!user) return null
 
   return (
