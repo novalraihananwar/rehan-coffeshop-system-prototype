@@ -29,7 +29,7 @@ export default function ActivityPage() {
     branch: o.branch,
   }))
 
-  const allLogs = [...activityLog, ...mockLogs].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+  const allLogs = [...activityLog, ...mockLogs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
   return (
     <div className="min-h-screen">
