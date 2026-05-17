@@ -71,6 +71,18 @@ export default function MenuPage() {
             </div>
           </div>
 
+          {/* Reservation Banner */}
+          <a href={`/table/${tableId}/reservation`} className="flex items-center justify-between bg-espresso-dark/5 border border-espresso-dark/15 rounded-xl px-3 py-2 mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🪑</span>
+              <div>
+                <p className="text-xs font-bold text-espresso-deep">Reservasi Meja</p>
+                <p className="text-[10px] text-cafe-muted">Pesan meja untuk kunjungan berikutnya</p>
+              </div>
+            </div>
+            <span className="text-espresso-mid text-xs font-semibold">→</span>
+          </a>
+
           {/* Search */}
           <div className="relative mb-3">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-cafe-muted text-sm">🔍</span>

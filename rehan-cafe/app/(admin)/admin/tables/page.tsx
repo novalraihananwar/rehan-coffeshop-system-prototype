@@ -33,12 +33,23 @@ export default function TablesPage() {
   const [sectionFilter, setSectionFilter] = useState<string>('all')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [tab, setTab] = useState<'tables' | 'reservations'>('tables')
+  // Table numbers with active orders from Supabase
+  const [occupiedFromDb, setOccupiedFromDb] = useState<Set<number>>(new Set())
 
   useEffect(() => {
+    const fetchActive = () => {
+      supabase.from('orders').select('table_number').in('status', ['confirmed', 'preparing', 'ready'])
+        .then(({ data }) => {
+          if (data) setOccupiedFromDb(new Set(data.map((r: { table_number: number }) => r.table_number)))
+        })
+    }
+    fetchActive()
+
     supabase.from('reservations').select('*').order('date', { ascending: true }).order('time', { ascending: true })
       .then(({ data }) => { if (data) setReservations(data as Reservation[]) })
 
-    const channel = supabase.channel('reservations-watch')
+    const channel = supabase.channel('tables-watch')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchActive)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
         supabase.from('reservations').select('*').order('date', { ascending: true })
           .then(({ data }) => { if (data) setReservations(data as Reservation[]) })
@@ -46,14 +57,20 @@ export default function TablesPage() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  const filtered = sectionFilter === 'all' ? tables : tables.filter((t) => t.section === sectionFilter)
-  const selectedTable = tables.find((t) => t.id === selected)
+  // Merge: Supabase active orders override localStorage table status
+  const mergedTables = tables.map((t) => {
+    if (occupiedFromDb.has(t.number)) return { ...t, status: 'occupied' as TableStatus }
+    return t
+  })
+
+  const filtered = sectionFilter === 'all' ? mergedTables : mergedTables.filter((t) => t.section === sectionFilter)
+  const selectedTable = mergedTables.find((t) => t.id === selected)
 
   const counts = {
-    empty: tables.filter((t) => t.status === 'empty').length,
-    occupied: tables.filter((t) => t.status === 'occupied').length,
-    reserved: tables.filter((t) => t.status === 'reserved').length,
-    cleaning: tables.filter((t) => t.status === 'cleaning').length,
+    empty: mergedTables.filter((t) => t.status === 'empty').length,
+    occupied: mergedTables.filter((t) => t.status === 'occupied').length,
+    reserved: mergedTables.filter((t) => t.status === 'reserved').length,
+    cleaning: mergedTables.filter((t) => t.status === 'cleaning').length,
   }
 
   const handleMarkEmpty = (tableId: string) => {
