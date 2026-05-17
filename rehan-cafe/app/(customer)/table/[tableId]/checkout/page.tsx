@@ -7,6 +7,7 @@ import { useOrderStore } from '@/lib/store/order.store'
 import { useAdminStore } from '@/lib/store/admin.store'
 import { formatRupiah, generateOrderNumber, generateId } from '@/lib/utils/format'
 import { PaymentMethod, Order } from '@/lib/types'
+import { supabase } from '@/lib/supabase'
 
 const paymentMethods: { key: PaymentMethod; label: string; icon: string; desc: string }[] = [
   { key: 'qris', label: 'QRIS', icon: '📱', desc: 'Scan QR Code' },
@@ -74,6 +75,25 @@ export default function CheckoutPage() {
 
     addOrder(order)
     addIncomingOrder(order)
+
+    await supabase.from('orders').insert({
+      id: order.id,
+      order_number: order.orderNumber,
+      table_id: order.tableId,
+      table_number: order.tableNumber,
+      type: order.type,
+      status: order.status,
+      total_amount: order.totalAmount,
+      payment_method: order.paymentMethod,
+      customer_name: order.customerName,
+      notes: order.notes,
+      estimated_time: order.estimatedTime,
+      branch: order.branch,
+      items: order.items,
+      created_at: order.createdAt.toISOString(),
+      updated_at: order.updatedAt.toISOString(),
+    })
+
     clearCart()
     setLoading(false)
     router.push(`/table/${tableId}/success?order=${order.id}&num=${orderNumber}&time=${estimatedTime()}`)

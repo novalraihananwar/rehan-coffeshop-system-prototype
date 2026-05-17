@@ -1,9 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminHeader from '@/components/admin/AdminHeader'
 import { useAdminStore } from '@/lib/store/admin.store'
-import { OrderStatus } from '@/lib/types'
+import { Order, OrderStatus } from '@/lib/types'
 import { formatRupiah, formatTime } from '@/lib/utils/format'
+import { supabase } from '@/lib/supabase'
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; bg: string }> = {
   pending: { label: 'Pending', color: 'text-cafe-muted', bg: 'bg-cream-base' },
@@ -21,11 +22,45 @@ const nextStatus: Partial<Record<OrderStatus, OrderStatus>> = {
   ready: 'completed',
 }
 
+const toOrder = (row: Record<string, unknown>): Order => ({
+  id: row.id as string,
+  orderNumber: row.order_number as string,
+  tableId: row.table_id as string,
+  tableNumber: row.table_number as number,
+  type: row.type as Order['type'],
+  status: row.status as OrderStatus,
+  totalAmount: row.total_amount as number,
+  paymentMethod: row.payment_method as Order['paymentMethod'],
+  customerName: row.customer_name as string,
+  notes: row.notes as string,
+  estimatedTime: row.estimated_time as number,
+  branch: row.branch as string,
+  items: row.items as Order['items'],
+  createdAt: new Date(row.created_at as string),
+  updatedAt: new Date(row.updated_at as string),
+})
+
 export default function OrdersPage() {
-  const { orders, updateOrderStatus } = useAdminStore()
+  const { orders: localOrders, updateOrderStatus } = useAdminStore()
+  const [dbOrders, setDbOrders] = useState<Order[]>([])
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [selected, setSelected] = useState<string | null>(null)
 
+  useEffect(() => {
+    supabase.from('orders').select('*').order('created_at', { ascending: false })
+      .then(({ data }) => { if (data) setDbOrders(data.map(toOrder)) })
+
+    const channel = supabase.channel('orders-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        supabase.from('orders').select('*').order('created_at', { ascending: false })
+          .then(({ data }) => { if (data) setDbOrders(data.map(toOrder)) })
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [])
+
+  const orders = dbOrders.length > 0 ? dbOrders : localOrders
   const filtered = filterStatus === 'all' ? orders : orders.filter((o) => o.status === filterStatus)
   const selectedOrder = orders.find((o) => o.id === selected)
 
@@ -100,7 +135,12 @@ export default function OrdersPage() {
                   <p className="text-cafe-muted text-xs truncate">{order.items.map((i) => `${i.menuItemName} (${i.size})×${i.quantity}`).join(', ')}</p>
                   {nextStatus[order.status] && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); updateOrderStatus(order.id, nextStatus[order.status]!) }}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const next = nextStatus[order.status]!
+                        updateOrderStatus(order.id, next)
+                        supabase.from('orders').update({ status: next, updated_at: new Date().toISOString() }).eq('id', order.id).then(() => {})
+                      }}
                       className="mt-3 text-xs font-semibold bg-espresso-dark text-warm-white px-4 py-1.5 rounded-full"
                     >
                       → {statusConfig[nextStatus[order.status]!].label}
