@@ -3,7 +3,7 @@ export type MenuCategory = 'coffee' | 'non-coffee' | 'food' | 'dessert' | 'bundl
 export type OrderStatus = 'pending' | 'confirmed' | 'preparing' | 'ready' | 'completed' | 'cancelled'
 export type TableStatus = 'empty' | 'occupied' | 'reserved' | 'cleaning'
 export type UserRole = 'super_admin' | 'owner' | 'manager' | 'cashier' | 'barista' | 'kitchen' | 'inventory' | 'supplier' | 'member'
-export type OrderType = 'dine_in' | 'takeaway' | 'preorder'
+export type OrderType = 'dine_in' | 'takeaway' | 'preorder' | 'reservation'
 export type LoyaltyTier = 'bronze' | 'silver' | 'gold'
 export type PaymentMethod = 'qris' | 'gopay' | 'ovo' | 'dana' | 'debit' | 'credit' | 'cash' | 'cashier'
 
@@ -59,6 +59,8 @@ export interface Order {
   notes: string
   customerName: string
   branch: string
+  scheduledTime?: string
+  reservationId?: string
 }
 
 export interface Table {

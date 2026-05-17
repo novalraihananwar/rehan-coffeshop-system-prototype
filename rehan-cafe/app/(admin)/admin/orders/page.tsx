@@ -38,6 +38,8 @@ const toOrder = (row: Record<string, unknown>): Order => ({
   items: row.items as Order['items'],
   createdAt: new Date(row.created_at as string),
   updatedAt: new Date(row.updated_at as string),
+  scheduledTime: row.scheduled_time as string | undefined,
+  reservationId: row.reservation_id as string | undefined,
 })
 
 export default function OrdersPage() {
@@ -130,6 +132,12 @@ export default function OrdersPage() {
                       <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
                     </div>
                   </div>
+                  {order.type === 'reservation' && order.scheduledTime && (
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="text-[10px] font-bold bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">🪑 Reservasi</span>
+                      <span className="text-[10px] text-purple-600 font-semibold">Siap jam {order.scheduledTime.split('T')[1]?.slice(0,5) ?? order.scheduledTime}</span>
+                    </div>
+                  )}
                   <p className="text-cafe-muted text-xs truncate">{order.items.map((i) => `${i.menuItemName} (${i.size})×${i.quantity}`).join(', ')}</p>
                   {nextStatus[order.status] && (
                     <button

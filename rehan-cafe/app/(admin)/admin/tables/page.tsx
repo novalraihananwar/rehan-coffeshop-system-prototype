@@ -33,34 +33,44 @@ export default function TablesPage() {
   const [sectionFilter, setSectionFilter] = useState<string>('all')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [tab, setTab] = useState<'tables' | 'reservations'>('tables')
-  // Table numbers with active orders from Supabase
-  const [occupiedFromDb, setOccupiedFromDb] = useState<Set<number>>(new Set())
+  const [occupiedNums, setOccupiedNums] = useState<Set<number>>(new Set())
+  const [reservedNums, setReservedNums] = useState<Map<number, Reservation>>(new Map())
 
   useEffect(() => {
     const fetchActive = () => {
       supabase.from('orders').select('table_number').in('status', ['confirmed', 'preparing', 'ready'])
         .then(({ data }) => {
-          if (data) setOccupiedFromDb(new Set(data.map((r: { table_number: number }) => r.table_number)))
+          if (data) setOccupiedNums(new Set(data.map((r: { table_number: number }) => r.table_number)))
+        })
+    }
+    const fetchReservations = () => {
+      const today = new Date().toISOString().split('T')[0]
+      supabase.from('reservations').select('*').gte('date', today).order('date').order('time')
+        .then(({ data }) => {
+          if (data) {
+            setReservations(data as Reservation[])
+            const map = new Map<number, Reservation>()
+            ;(data as Reservation[]).forEach((r) => { if (!map.has(r.table_number)) map.set(r.table_number, r) })
+            setReservedNums(map)
+          }
         })
     }
     fetchActive()
-
-    supabase.from('reservations').select('*').order('date', { ascending: true }).order('time', { ascending: true })
-      .then(({ data }) => { if (data) setReservations(data as Reservation[]) })
+    fetchReservations()
 
     const channel = supabase.channel('tables-watch')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchActive)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, () => {
-        supabase.from('reservations').select('*').order('date', { ascending: true })
-          .then(({ data }) => { if (data) setReservations(data as Reservation[]) })
-      }).subscribe()
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, fetchReservations)
+      .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  // Merge: Supabase active orders override localStorage table status
+  // Derive status purely from Supabase: occupied > reserved > cleaning (localStorage) > empty
   const mergedTables = tables.map((t) => {
-    if (occupiedFromDb.has(t.number)) return { ...t, status: 'occupied' as TableStatus }
-    return t
+    if (occupiedNums.has(t.number)) return { ...t, status: 'occupied' as TableStatus }
+    if (reservedNums.has(t.number)) return { ...t, status: 'reserved' as TableStatus }
+    if (t.status === 'cleaning') return t
+    return { ...t, status: 'empty' as TableStatus }
   })
 
   const filtered = sectionFilter === 'all' ? mergedTables : mergedTables.filter((t) => t.section === sectionFilter)
@@ -155,15 +165,19 @@ export default function TablesPage() {
               {filtered.map((table) => {
                 const cfg = statusConfig[table.status]
                 const isSelected = selected === table.id
+                const rsv = reservedNums.get(table.number)
                 return (
                   <button
                     key={table.id}
                     onClick={() => setSelected(isSelected ? null : table.id)}
                     className={`aspect-square rounded-xl flex flex-col items-center justify-center text-xs font-bold transition-all ${isSelected ? 'ring-2 ring-espresso-dark ring-offset-1' : ''} ${cfg.bg} text-warm-white`}
-                    title={`Meja ${table.number} — ${cfg.label} (${table.capacity} orang)`}
+                    title={`Meja ${table.number} — ${cfg.label} (${table.capacity} orang)${rsv ? ` | Reservasi ${rsv.time} — ${rsv.customer_name}` : ''}`}
                   >
                     <span className="text-sm">{table.number}</span>
-                    <span className="text-[8px] opacity-70">{table.capacity}p</span>
+                    {rsv && table.status === 'reserved'
+                      ? <span className="text-[7px] opacity-90 leading-tight">{rsv.time}</span>
+                      : <span className="text-[8px] opacity-70">{table.capacity}p</span>
+                    }
                   </button>
                 )
               })}
@@ -190,12 +204,16 @@ export default function TablesPage() {
                   <span className="text-cafe-muted">Area</span>
                   <span className="font-semibold text-espresso-deep capitalize">{selectedTable.section}</span>
                 </div>
-                {selectedTable.reservedBy && (
-                  <div className="flex justify-between">
-                    <span className="text-cafe-muted">Reserved by</span>
-                    <span className="font-semibold text-espresso-deep text-xs">{selectedTable.reservedBy}</span>
-                  </div>
-                )}
+                {reservedNums.has(selectedTable.number) && (() => {
+                  const rsv = reservedNums.get(selectedTable.number)!
+                  return <>
+                    <div className="flex justify-between"><span className="text-cafe-muted">Atas nama</span><span className="font-semibold text-espresso-deep text-xs">{rsv.customer_name}</span></div>
+                    <div className="flex justify-between"><span className="text-cafe-muted">Jadwal</span><span className="font-semibold text-espresso-deep text-xs">{rsv.date} · {rsv.time}</span></div>
+                    <div className="flex justify-between"><span className="text-cafe-muted">Tamu</span><span className="font-semibold text-espresso-deep text-xs">{rsv.guest_count} orang</span></div>
+                    {rsv.customer_phone && <div className="flex justify-between"><span className="text-cafe-muted">HP</span><span className="font-semibold text-espresso-deep text-xs">{rsv.customer_phone}</span></div>}
+                    {rsv.notes && <div className="flex justify-between"><span className="text-cafe-muted">Catatan</span><span className="font-semibold text-espresso-deep text-xs">{rsv.notes}</span></div>}
+                  </>
+                })()}
               </div>
 
               <div className="space-y-2">

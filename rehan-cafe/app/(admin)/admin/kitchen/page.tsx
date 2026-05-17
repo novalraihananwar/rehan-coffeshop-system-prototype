@@ -10,6 +10,15 @@ function minutesAgo(date: Date | string): number {
   return Math.floor((Date.now() - new Date(date).getTime()) / 60000)
 }
 
+function scheduledTimeLabel(scheduledTime: string): string {
+  const t = scheduledTime.includes('T') ? scheduledTime.split('T')[1]?.slice(0, 5) : scheduledTime
+  return t ?? scheduledTime
+}
+
+function isScheduledNow(scheduledTime: string): boolean {
+  return new Date() >= new Date(scheduledTime)
+}
+
 const toOrder = (row: Record<string, unknown>): Order => ({
   id: row.id as string,
   orderNumber: row.order_number as string,
@@ -26,6 +35,8 @@ const toOrder = (row: Record<string, unknown>): Order => ({
   items: row.items as Order['items'],
   createdAt: new Date(row.created_at as string),
   updatedAt: new Date(row.updated_at as string),
+  scheduledTime: row.scheduled_time as string | undefined,
+  reservationId: row.reservation_id as string | undefined,
 })
 
 export default function KitchenPage() {
@@ -36,7 +47,7 @@ export default function KitchenPage() {
 
   useEffect(() => {
     const fetchOrders = () => {
-      supabase.from('orders').select('*').in('status', ['confirmed', 'preparing', 'ready'])
+      supabase.from('orders').select('*').in('status', ['pending', 'confirmed', 'preparing', 'ready'])
         .order('created_at', { ascending: true })
         .then(({ data }) => { if (data) setDbOrders(data.map(toOrder)) })
     }
@@ -67,6 +78,7 @@ export default function KitchenPage() {
     return true
   }
 
+  const scheduled = dbOrders.filter((o) => o.type === 'reservation' && o.status === 'pending' && filterByRole(o))
   const queued = dbOrders.filter((o) => o.status === 'confirmed' && filterByRole(o))
   const preparing = dbOrders.filter((o) => o.status === 'preparing' && filterByRole(o))
   const ready = dbOrders.filter((o) => o.status === 'ready' && filterByRole(o))
@@ -122,6 +134,21 @@ export default function KitchenPage() {
           <span className="text-espresso-light/70 text-sm">Live · Supabase</span>
         </div>
       </div>
+
+      {/* Scheduled Reservations Banner */}
+      {scheduled.length > 0 && (
+        <div className="bg-purple-900 border-b border-purple-700 px-6 py-3 flex items-center gap-3 overflow-x-auto">
+          <span className="text-purple-200 text-xs font-bold flex-shrink-0">🪑 Reservasi Terjadwal:</span>
+          {scheduled.map((o) => (
+            <div key={o.id} className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold ${o.scheduledTime && isScheduledNow(o.scheduledTime) ? 'bg-red-500 text-white animate-pulse' : 'bg-purple-700 text-purple-100'}`}>
+              Meja {o.tableNumber} · {o.scheduledTime ? scheduledTimeLabel(o.scheduledTime) : '-'} · {o.customerName}
+              {o.scheduledTime && isScheduledNow(o.scheduledTime) && (
+                <button onClick={() => handleStatusChange(o.id, 'confirmed')} className="ml-2 bg-white text-red-600 rounded px-1.5 font-bold">Mulai!</button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-3 h-[calc(100vh-72px)] divide-x divide-espresso-light/10">
         <div className="p-4 overflow-y-auto">
