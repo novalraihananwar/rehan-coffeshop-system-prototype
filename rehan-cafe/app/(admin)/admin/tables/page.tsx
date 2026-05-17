@@ -109,7 +109,8 @@ export default function TablesPage() {
           </div>
         )}
 
-        {tab === 'tables' && <>
+        {tab === 'tables' && (
+        <div>
         {/* Legend */}
         <div className="flex flex-wrap gap-4 mb-5">
           {Object.entries(statusConfig).map(([status, cfg]) => (
@@ -220,7 +221,8 @@ export default function TablesPage() {
             </div>
           )}
         </div>
-        }
+        </div>
+        )}
       </div>
     </div>
   )
