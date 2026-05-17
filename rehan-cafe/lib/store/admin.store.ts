@@ -2,9 +2,27 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { Order, Table, InventoryItem, ActivityLog, OrderStatus } from '../types'
-import { mockOrders } from '../mock-data/orders'
 import { mockTables } from '../mock-data/tables'
 import { mockInventory } from '../mock-data/inventory'
+
+// Simple ingredient deduction per order item (units match inventory)
+const DEDUCTIONS: Record<string, { id: string; amount: number }[]> = {
+  coffee: [{ id: 'inv-001', amount: 18 }, { id: 'inv-002', amount: 200 }, { id: 'inv-008', amount: 1 }],
+  latte: [{ id: 'inv-001', amount: 18 }, { id: 'inv-002', amount: 250 }, { id: 'inv-008', amount: 1 }],
+  mocha: [{ id: 'inv-001', amount: 18 }, { id: 'inv-002', amount: 200 }, { id: 'inv-005', amount: 20 }, { id: 'inv-008', amount: 1 }],
+  matcha: [{ id: 'inv-004', amount: 15 }, { id: 'inv-002', amount: 250 }, { id: 'inv-008', amount: 1 }],
+  chocolate: [{ id: 'inv-005', amount: 25 }, { id: 'inv-002', amount: 200 }, { id: 'inv-008', amount: 1 }],
+  chicken: [{ id: 'inv-012', amount: 150 }, { id: 'inv-011', amount: 1 }],
+  default: [{ id: 'inv-006', amount: 10 }, { id: 'inv-011', amount: 1 }],
+}
+
+function getDeductionKey(menuItemId: string): string {
+  if (menuItemId.includes('matcha')) return 'matcha'
+  if (menuItemId.includes('mocha') || menuItemId.includes('chocolate')) return 'mocha'
+  if (menuItemId.includes('latte') || menuItemId.includes('coffee') || menuItemId.includes('brew') || menuItemId.includes('cappuccino') || menuItemId.includes('espresso')) return 'latte'
+  if (menuItemId.includes('chicken') || menuItemId.includes('katsu')) return 'chicken'
+  return 'default'
+}
 
 interface AdminStore {
   orders: Order[]
@@ -21,6 +39,7 @@ interface AdminStore {
   addNotification: (message: string) => void
   clearNotification: (index: number) => void
   addIncomingOrder: (order: Order) => void
+  deductInventory: (order: Order) => void
 
   todayRevenue: () => number
   todayOrders: () => number
@@ -31,7 +50,7 @@ interface AdminStore {
 export const useAdminStore = create<AdminStore>()(
   persist(
     (set, get) => ({
-      orders: [...mockOrders],
+      orders: [],
       tables: [...mockTables],
       inventory: [...mockInventory],
       activityLog: [],
@@ -49,7 +68,7 @@ export const useAdminStore = create<AdminStore>()(
 
       updateTableStatus: (tableId, status) =>
         set({
-          tables: get().tables.map((t) => (t.id === tableId ? { ...t, status } : t)),
+          tables: get().tables.map((t) => (t.id === tableId ? { ...t, status, currentOrderId: status === 'empty' ? undefined : t.currentOrderId } : t)),
         }),
 
       addActivity: (log) =>
@@ -83,6 +102,24 @@ export const useAdminStore = create<AdminStore>()(
         get().addNotification(`Order baru masuk — Meja ${order.tableNumber} (${order.orderNumber})`)
       },
 
+      deductInventory: (order) => {
+        const inventory = [...get().inventory]
+        order.items.forEach((item) => {
+          const key = getDeductionKey(item.menuItemId)
+          const deductions = DEDUCTIONS[key] || DEDUCTIONS.default
+          deductions.forEach(({ id, amount }) => {
+            const idx = inventory.findIndex((i) => i.id === id)
+            if (idx >= 0) {
+              inventory[idx] = {
+                ...inventory[idx],
+                currentStock: Math.max(0, inventory[idx].currentStock - amount * item.quantity),
+              }
+            }
+          })
+        })
+        set({ inventory })
+      },
+
       todayRevenue: () =>
         get().orders
           .filter((o) => o.status === 'completed')
@@ -96,12 +133,11 @@ export const useAdminStore = create<AdminStore>()(
     }),
     {
       name: 'rehan-cafe-admin',
-      partialize: (state) => ({ orders: state.orders, tables: state.tables }),
+      partialize: (state) => ({ tables: state.tables, inventory: state.inventory }),
     }
   )
 )
 
-// Sync cross-tab: when another tab updates localStorage, rehydrate this store
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
     if (e.key === 'rehan-cafe-admin') {

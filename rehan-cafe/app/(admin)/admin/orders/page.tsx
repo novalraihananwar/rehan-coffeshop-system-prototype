@@ -60,7 +60,7 @@ export default function OrdersPage() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  const orders = dbOrders.length > 0 ? dbOrders : localOrders
+  const orders = dbOrders
   const filtered = filterStatus === 'all' ? orders : orders.filter((o) => o.status === filterStatus)
   const selectedOrder = orders.find((o) => o.id === selected)
 
@@ -69,21 +69,19 @@ export default function OrdersPage() {
       <AdminHeader title="Orders" subtitle={`${orders.length} total order`} />
       <div className="p-6">
         {/* Customer Menu Link */}
-        <div className="mb-5 flex items-center justify-between bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3.5">
-          <div>
-            <p className="text-sm font-bold text-amber-900">Menu Digital Customer (via QR Meja)</p>
-            <p className="text-xs text-amber-700 mt-0.5">Bagikan link ini ke pelanggan atau scan QR di meja</p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0 ml-4">
-            {[1, 2, 3].map((n) => (
+        <div className="mb-5 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
+          <p className="text-sm font-bold text-amber-900 mb-1">Menu Digital Customer (via QR Meja)</p>
+          <p className="text-xs text-amber-700 mb-3">Bagikan link ke pelanggan atau scan QR di meja</p>
+          <div className="grid grid-cols-10 gap-1.5 max-h-32 overflow-y-auto">
+            {Array.from({ length: 100 }, (_, i) => i + 1).map((n) => (
               <a
                 key={n}
                 href={`/table/table-${n}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 bg-amber-800 hover:bg-amber-900 text-warm-white text-xs font-bold px-3 py-2 rounded-xl transition-colors"
+                className="flex items-center justify-center bg-amber-800 hover:bg-amber-900 text-warm-white text-xs font-bold py-1.5 rounded-lg transition-colors"
               >
-                🪑 Meja {n}
+                {n}
               </a>
             ))}
           </div>

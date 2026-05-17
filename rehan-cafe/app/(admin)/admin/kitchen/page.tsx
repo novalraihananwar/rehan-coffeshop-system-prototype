@@ -4,45 +4,72 @@ import { useAdminStore } from '@/lib/store/admin.store'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { Order, OrderStatus } from '@/lib/types'
 import { formatTime } from '@/lib/utils/format'
+import { supabase } from '@/lib/supabase'
 
-const COFFEE_CATEGORY = ['coffee', 'non-coffee']
-const FOOD_CATEGORY = ['food', 'dessert', 'bundle']
-
-function minutesAgo(date: Date): number {
-  return Math.floor((Date.now() - date.getTime()) / 60000)
+function minutesAgo(date: Date | string): number {
+  return Math.floor((Date.now() - new Date(date).getTime()) / 60000)
 }
 
+const toOrder = (row: Record<string, unknown>): Order => ({
+  id: row.id as string,
+  orderNumber: row.order_number as string,
+  tableId: row.table_id as string,
+  tableNumber: row.table_number as number,
+  type: row.type as Order['type'],
+  status: row.status as OrderStatus,
+  totalAmount: row.total_amount as number,
+  paymentMethod: row.payment_method as Order['paymentMethod'],
+  customerName: row.customer_name as string,
+  notes: row.notes as string,
+  estimatedTime: row.estimated_time as number,
+  branch: row.branch as string,
+  items: row.items as Order['items'],
+  createdAt: new Date(row.created_at as string),
+  updatedAt: new Date(row.updated_at as string),
+})
+
 export default function KitchenPage() {
-  const { orders, updateOrderStatus } = useAdminStore()
+  const { updateOrderStatus } = useAdminStore()
   const { user } = useAuthStore()
+  const [dbOrders, setDbOrders] = useState<Order[]>([])
   const [tick, setTick] = useState(0)
 
   useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 30000)
-    return () => clearInterval(interval)
+    const fetchOrders = () => {
+      supabase.from('orders').select('*').in('status', ['confirmed', 'preparing', 'ready'])
+        .order('created_at', { ascending: true })
+        .then(({ data }) => { if (data) setDbOrders(data.map(toOrder)) })
+    }
+    fetchOrders()
+
+    const channel = supabase.channel('kitchen-orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
+      .subscribe()
+
+    const ticker = setInterval(() => setTick((t) => t + 1), 30000)
+    return () => { supabase.removeChannel(channel); clearInterval(ticker) }
   }, [])
 
-  const activeOrders = orders.filter((o) => ['confirmed', 'preparing', 'ready'].includes(o.status))
+  const handleStatusChange = (orderId: string, status: OrderStatus) => {
+    updateOrderStatus(orderId, status)
+    supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', orderId).then(() => {
+      setDbOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status } : o))
+    })
+  }
 
   const filterByRole = (order: Order) => {
     if (user?.role === 'barista') {
-      return order.items.some((i) => {
-        const menuCat = i.menuItemId.includes('latte') || i.menuItemId.includes('coffee') || i.menuItemId.includes('brew') || i.menuItemId.includes('mocha') || i.menuItemId.includes('chocolate') || i.menuItemId.includes('tea') || i.menuItemId.includes('mojito')
-        return menuCat
-      })
+      return order.items.some((i) => i.menuItemId.includes('latte') || i.menuItemId.includes('coffee') || i.menuItemId.includes('brew') || i.menuItemId.includes('mocha') || i.menuItemId.includes('chocolate') || i.menuItemId.includes('tea') || i.menuItemId.includes('mojito') || i.menuItemId.includes('matcha'))
     }
     if (user?.role === 'kitchen') {
-      return order.items.some((i) => {
-        const menuCat = i.menuItemId.includes('chicken') || i.menuItemId.includes('pasta') || i.menuItemId.includes('beef') || i.menuItemId.includes('spaghetti') || i.menuItemId.includes('rice') || i.menuItemId.includes('fries') || i.menuItemId.includes('croissant') || i.menuItemId.includes('steak') || i.menuItemId.includes('salmon') || i.menuItemId.includes('cheesecake') || i.menuItemId.includes('croffle') || i.menuItemId.includes('tiramisu') || i.menuItemId.includes('chocolate-lava')
-        return menuCat
-      })
+      return order.items.some((i) => i.menuItemId.includes('chicken') || i.menuItemId.includes('pasta') || i.menuItemId.includes('beef') || i.menuItemId.includes('fries') || i.menuItemId.includes('croissant') || i.menuItemId.includes('steak') || i.menuItemId.includes('salmon') || i.menuItemId.includes('cheesecake') || i.menuItemId.includes('croffle') || i.menuItemId.includes('tiramisu'))
     }
     return true
   }
 
-  const queued = activeOrders.filter((o) => o.status === 'confirmed' && filterByRole(o))
-  const preparing = activeOrders.filter((o) => o.status === 'preparing' && filterByRole(o))
-  const ready = activeOrders.filter((o) => o.status === 'ready' && filterByRole(o))
+  const queued = dbOrders.filter((o) => o.status === 'confirmed' && filterByRole(o))
+  const preparing = dbOrders.filter((o) => o.status === 'preparing' && filterByRole(o))
+  const ready = dbOrders.filter((o) => o.status === 'ready' && filterByRole(o))
 
   const OrderCard = ({ order, onAction, actionLabel }: { order: Order; onAction: () => void; actionLabel: string }) => {
     const elapsed = minutesAgo(order.createdAt)
@@ -74,10 +101,7 @@ export default function KitchenPage() {
             </div>
           ))}
         </div>
-        <button
-          onClick={onAction}
-          className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all ${isUrgent ? 'bg-red-500 text-white' : 'bg-espresso-dark text-warm-white'}`}
-        >
+        <button onClick={onAction} className={`w-full py-2.5 rounded-xl font-bold text-sm transition-all ${isUrgent ? 'bg-red-500 text-white' : 'bg-espresso-dark text-warm-white'}`}>
           {actionLabel}
         </button>
       </div>
@@ -95,12 +119,11 @@ export default function KitchenPage() {
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-olive-sage rounded-full animate-pulse" />
-          <span className="text-espresso-light/70 text-sm">Live</span>
+          <span className="text-espresso-light/70 text-sm">Live · Supabase</span>
         </div>
       </div>
 
       <div className="grid grid-cols-3 h-[calc(100vh-72px)] divide-x divide-espresso-light/10">
-        {/* Antrian */}
         <div className="p-4 overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display font-bold text-espresso-light text-lg">Antrian</h2>
@@ -108,13 +131,12 @@ export default function KitchenPage() {
           </div>
           <div className="space-y-3">
             {queued.map((order) => (
-              <OrderCard key={order.id} order={order} actionLabel="Mulai Masak →" onAction={() => updateOrderStatus(order.id, 'preparing')} />
+              <OrderCard key={order.id} order={order} actionLabel="Mulai Masak →" onAction={() => handleStatusChange(order.id, 'preparing')} />
             ))}
             {queued.length === 0 && <p className="text-espresso-light/30 text-center py-8">Tidak ada antrian</p>}
           </div>
         </div>
 
-        {/* Sedang Dibuat */}
         <div className="p-4 overflow-y-auto bg-espresso-deep/30">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display font-bold text-espresso-light text-lg">Sedang Dibuat</h2>
@@ -122,13 +144,12 @@ export default function KitchenPage() {
           </div>
           <div className="space-y-3">
             {preparing.map((order) => (
-              <OrderCard key={order.id} order={order} actionLabel="Tandai Siap ✓" onAction={() => updateOrderStatus(order.id, 'ready')} />
+              <OrderCard key={order.id} order={order} actionLabel="Tandai Siap ✓" onAction={() => handleStatusChange(order.id, 'ready')} />
             ))}
             {preparing.length === 0 && <p className="text-espresso-light/30 text-center py-8">Tidak ada yang diproses</p>}
           </div>
         </div>
 
-        {/* Siap */}
         <div className="p-4 overflow-y-auto">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display font-bold text-olive-sage text-lg">Siap Disajikan</h2>
@@ -136,7 +157,7 @@ export default function KitchenPage() {
           </div>
           <div className="space-y-3">
             {ready.map((order) => (
-              <OrderCard key={order.id} order={order} actionLabel="Selesai 🎉" onAction={() => updateOrderStatus(order.id, 'completed')} />
+              <OrderCard key={order.id} order={order} actionLabel="Selesai 🎉" onAction={() => handleStatusChange(order.id, 'completed')} />
             ))}
             {ready.length === 0 && <p className="text-olive-sage/30 text-center py-8">Belum ada yang siap</p>}
           </div>
