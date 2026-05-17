@@ -49,8 +49,11 @@ export default function TablesPage() {
         .then(({ data }) => {
           if (data) {
             setReservations(data as Reservation[])
+            // Only mark as reserved if status is still 'confirmed' (not 'arrived')
             const map = new Map<number, Reservation>()
-            ;(data as Reservation[]).forEach((r) => { if (!map.has(r.table_number)) map.set(r.table_number, r) })
+            ;(data as Reservation[]).filter((r) => r.status === 'confirmed').forEach((r) => {
+              if (!map.has(r.table_number)) map.set(r.table_number, r)
+            })
             setReservedNums(map)
           }
         })
@@ -88,16 +91,30 @@ export default function TablesPage() {
     setSelected(null)
   }
 
-  const handleNextStatus = (tableId: string, current: TableStatus) => {
+  const handleNextStatus = (tableId: string, current: TableStatus, tableNumber?: number) => {
     const next: Partial<Record<TableStatus, TableStatus>> = {
       occupied: 'cleaning',
       cleaning: 'empty',
       reserved: 'occupied',
     }
-    if (next[current]) {
-      updateTableStatus(tableId, next[current]!)
-      setSelected(null)
+    if (!next[current]) return
+    updateTableStatus(tableId, next[current]!)
+
+    // If reserved → occupied: update reservation status in Supabase so table shows as occupied
+    if (current === 'reserved' && tableNumber) {
+      const rsv = reservedNums.get(tableNumber)
+      if (rsv) {
+        supabase.from('reservations').update({ status: 'arrived' }).eq('id', rsv.id).then(() => {
+          // Also activate the reservation order (pending → confirmed)
+          supabase.from('orders').update({ status: 'confirmed', updated_at: new Date().toISOString() })
+            .eq('reservation_id', rsv.id).eq('status', 'pending').then(() => {})
+          // Remove from local reservedNums immediately
+          setReservedNums((prev) => { const m = new Map(prev); m.delete(tableNumber); return m })
+          setOccupiedNums((prev) => new Set([...prev, tableNumber]))
+        })
+      }
     }
+    setSelected(null)
   }
 
   return (
@@ -220,7 +237,7 @@ export default function TablesPage() {
                 {selectedTable.status === 'occupied' && (
                   <>
                     <button
-                      onClick={() => handleNextStatus(selectedTable.id, selectedTable.status)}
+                      onClick={() => handleNextStatus(selectedTable.id, selectedTable.status, selectedTable.number)}
                       className="w-full bg-latte text-espresso-deep py-2 rounded-xl text-xs font-bold"
                     >
                       → Tandai Cleaning
@@ -243,7 +260,7 @@ export default function TablesPage() {
                 )}
                 {selectedTable.status === 'reserved' && (
                   <button
-                    onClick={() => handleNextStatus(selectedTable.id, selectedTable.status)}
+                    onClick={() => handleNextStatus(selectedTable.id, selectedTable.status, selectedTable.number)}
                     className="w-full bg-espresso-dark text-warm-white py-2 rounded-xl text-xs font-bold"
                   >
                     → Customer Datang (Terisi)
