@@ -35,6 +35,8 @@ export default function TablesPage() {
   const [tab, setTab] = useState<'tables' | 'reservations'>('tables')
   const [occupiedNums, setOccupiedNums] = useState<Set<number>>(new Set())
   const [reservedNums, setReservedNums] = useState<Map<number, Reservation>>(new Map())
+  const [cleaningNums, setCleaningNums] = useState<Set<number>>(new Set())
+  const [emptyOverrides, setEmptyOverrides] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     const fetchActive = () => {
@@ -68,11 +70,12 @@ export default function TablesPage() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  // Derive status purely from Supabase: occupied > reserved > cleaning (localStorage) > empty
+  // Local overrides take priority: empty > cleaning > Supabase occupied > reserved
   const mergedTables = tables.map((t) => {
+    if (emptyOverrides.has(t.number)) return { ...t, status: 'empty' as TableStatus }
+    if (cleaningNums.has(t.number)) return { ...t, status: 'cleaning' as TableStatus }
     if (occupiedNums.has(t.number)) return { ...t, status: 'occupied' as TableStatus }
     if (reservedNums.has(t.number)) return { ...t, status: 'reserved' as TableStatus }
-    if (t.status === 'cleaning') return t
     return { ...t, status: 'empty' as TableStatus }
   })
 
@@ -86,33 +89,31 @@ export default function TablesPage() {
     cleaning: mergedTables.filter((t) => t.status === 'cleaning').length,
   }
 
-  const handleMarkEmpty = (tableId: string) => {
-    updateTableStatus(tableId, 'empty')
+  const handleMarkCleaning = (tableNumber: number) => {
+    setCleaningNums((prev) => new Set([...prev, tableNumber]))
+    setOccupiedNums((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
+    setEmptyOverrides((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
     setSelected(null)
   }
 
-  const handleNextStatus = (tableId: string, current: TableStatus, tableNumber?: number) => {
-    const next: Partial<Record<TableStatus, TableStatus>> = {
-      occupied: 'cleaning',
-      cleaning: 'empty',
-      reserved: 'occupied',
-    }
-    if (!next[current]) return
-    updateTableStatus(tableId, next[current]!)
+  const handleMarkEmpty = (tableNumber: number) => {
+    setEmptyOverrides((prev) => new Set([...prev, tableNumber]))
+    setCleaningNums((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
+    setOccupiedNums((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
+    setSelected(null)
+  }
 
-    // If reserved → occupied: update reservation status in Supabase so table shows as occupied
-    if (current === 'reserved' && tableNumber) {
-      const rsv = reservedNums.get(tableNumber)
-      if (rsv) {
-        supabase.from('reservations').update({ status: 'arrived' }).eq('id', rsv.id).then(() => {
-          // Also activate the reservation order (pending → confirmed)
-          supabase.from('orders').update({ status: 'confirmed', updated_at: new Date().toISOString() })
-            .eq('reservation_id', rsv.id).eq('status', 'pending').then(() => {})
-          // Remove from local reservedNums immediately
-          setReservedNums((prev) => { const m = new Map(prev); m.delete(tableNumber); return m })
-          setOccupiedNums((prev) => new Set([...prev, tableNumber]))
-        })
-      }
+  const handleCustomerArrived = (tableNumber: number) => {
+    const rsv = reservedNums.get(tableNumber)
+    setOccupiedNums((prev) => new Set([...prev, tableNumber]))
+    setReservedNums((prev) => { const m = new Map(prev); m.delete(tableNumber); return m })
+    setEmptyOverrides((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
+
+    if (rsv) {
+      supabase.from('reservations').update({ status: 'arrived' }).eq('id', rsv.id).then(() => {
+        supabase.from('orders').update({ status: 'confirmed', updated_at: new Date().toISOString() })
+          .eq('reservation_id', rsv.id).eq('status', 'pending').then(() => {})
+      })
     }
     setSelected(null)
   }
@@ -237,13 +238,13 @@ export default function TablesPage() {
                 {selectedTable.status === 'occupied' && (
                   <>
                     <button
-                      onClick={() => handleNextStatus(selectedTable.id, selectedTable.status, selectedTable.number)}
+                      onClick={() => handleMarkCleaning(selectedTable.number)}
                       className="w-full bg-latte text-espresso-deep py-2 rounded-xl text-xs font-bold"
                     >
-                      → Tandai Cleaning
+                      🧹 Tandai Cleaning
                     </button>
                     <button
-                      onClick={() => handleMarkEmpty(selectedTable.id)}
+                      onClick={() => handleMarkEmpty(selectedTable.number)}
                       className="w-full bg-olive-sage text-warm-white py-2 rounded-xl text-xs font-bold"
                     >
                       ✓ Konfirmasi Meja Kosong
@@ -252,7 +253,7 @@ export default function TablesPage() {
                 )}
                 {selectedTable.status === 'cleaning' && (
                   <button
-                    onClick={() => handleMarkEmpty(selectedTable.id)}
+                    onClick={() => handleMarkEmpty(selectedTable.number)}
                     className="w-full bg-olive-sage text-warm-white py-2 rounded-xl text-xs font-bold"
                   >
                     ✓ Selesai — Meja Kosong
@@ -260,7 +261,7 @@ export default function TablesPage() {
                 )}
                 {selectedTable.status === 'reserved' && (
                   <button
-                    onClick={() => handleNextStatus(selectedTable.id, selectedTable.status, selectedTable.number)}
+                    onClick={() => handleCustomerArrived(selectedTable.number)}
                     className="w-full bg-espresso-dark text-warm-white py-2 rounded-xl text-xs font-bold"
                   >
                     → Customer Datang (Terisi)
