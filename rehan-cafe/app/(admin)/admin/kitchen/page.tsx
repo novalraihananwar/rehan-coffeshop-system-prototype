@@ -44,6 +44,8 @@ export default function KitchenPage() {
   const { user } = useAuthStore()
   const [dbOrders, setDbOrders] = useState<Order[]>([])
   const [tick, setTick] = useState(0)
+  const [reminderAlert, setReminderAlert] = useState<{name: string; table: number; time: string} | null>(null)
+  const sentReminders = useState<Set<string>>(() => new Set())[0]
 
   useEffect(() => {
     const fetchOrders = () => {
@@ -57,8 +59,46 @@ export default function KitchenPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
       .subscribe()
 
+    // Check every minute for reservations due in 10 minutes
+    const reminderChecker = setInterval(async () => {
+      const now = new Date()
+      const in10 = new Date(now.getTime() + 10 * 60 * 1000)
+      const targetDate = in10.toISOString().split('T')[0]
+      const targetTime = `${String(in10.getHours()).padStart(2, '0')}:${String(in10.getMinutes()).padStart(2, '0')}`
+
+      const { data } = await supabase.from('reservations').select('*')
+        .eq('date', targetDate).eq('time', targetTime).eq('status', 'confirmed').eq('reminder_sent', false)
+
+      if (data && data.length > 0) {
+        for (const rsv of data) {
+          if (sentReminders.has(rsv.id)) continue
+          sentReminders.add(rsv.id)
+          setReminderAlert({ name: rsv.customer_name, table: rsv.table_number, time: rsv.time })
+
+          // Send WA reminder if phone available
+          if (rsv.customer_phone) {
+            fetch('/api/send-wa', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'reminder',
+                phone: rsv.customer_phone,
+                name: rsv.customer_name,
+                table: rsv.table_number,
+                date: rsv.date,
+                time: rsv.time,
+                guests: rsv.guest_count,
+              }),
+            }).then(() => {
+              supabase.from('reservations').update({ reminder_sent: true }).eq('id', rsv.id).then(() => {})
+            }).catch(() => {})
+          }
+        }
+      }
+    }, 60000)
+
     const ticker = setInterval(() => setTick((t) => t + 1), 30000)
-    return () => { supabase.removeChannel(channel); clearInterval(ticker) }
+    return () => { supabase.removeChannel(channel); clearInterval(ticker); clearInterval(reminderChecker) }
   }, [])
 
   const handleStatusChange = (orderId: string, status: OrderStatus) => {
@@ -134,6 +174,20 @@ export default function KitchenPage() {
           <span className="text-espresso-light/70 text-sm">Live · Supabase</span>
         </div>
       </div>
+
+      {/* 10-minute Reminder Alert */}
+      {reminderAlert && (
+        <div className="bg-yellow-400 px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl animate-bounce">🔔</span>
+            <div>
+              <p className="font-bold text-yellow-900 text-sm">REMINDER: Reservasi dalam 10 menit!</p>
+              <p className="text-yellow-800 text-xs">{reminderAlert.name} — Meja {reminderAlert.table} jam {reminderAlert.time} · WA sudah terkirim</p>
+            </div>
+          </div>
+          <button onClick={() => setReminderAlert(null)} className="text-yellow-800 font-bold text-lg">✕</button>
+        </div>
+      )}
 
       {/* Scheduled Reservations Banner */}
       {scheduled.length > 0 && (
