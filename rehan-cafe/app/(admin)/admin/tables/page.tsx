@@ -47,11 +47,13 @@ export default function TablesPage() {
     }
     const fetchReservations = () => {
       const today = new Date().toISOString().split('T')[0]
-      supabase.from('reservations').select('*').gte('date', today).order('date').order('time')
+      supabase.from('reservations').select('*').gte('date', today)
+        .not('status', 'eq', 'completed')
+        .order('date').order('time')
         .then(({ data }) => {
           if (data) {
             setReservations(data as Reservation[])
-            // Only mark as reserved if status is still 'confirmed' (not 'arrived')
+            // Only mark as reserved if status is still 'confirmed' (not 'arrived' or 'completed')
             const map = new Map<number, Reservation>()
             ;(data as Reservation[]).filter((r) => r.status === 'confirmed').forEach((r) => {
               if (!map.has(r.table_number)) map.set(r.table_number, r)

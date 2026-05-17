@@ -145,7 +145,12 @@ export default function OrdersPage() {
                         e.stopPropagation()
                         const next = nextStatus[order.status]!
                         updateOrderStatus(order.id, next)
-                        supabase.from('orders').update({ status: next, updated_at: new Date().toISOString() }).eq('id', order.id).then(() => {})
+                        supabase.from('orders').update({ status: next, updated_at: new Date().toISOString() }).eq('id', order.id).then(() => {
+                          // When reservation order completed → mark reservation as completed
+                          if (next === 'completed' && order.reservationId) {
+                            supabase.from('reservations').update({ status: 'completed' }).eq('id', order.reservationId).then(() => {})
+                          }
+                        })
                       }}
                       className="mt-3 text-xs font-semibold bg-espresso-dark text-warm-white px-4 py-1.5 rounded-full"
                     >

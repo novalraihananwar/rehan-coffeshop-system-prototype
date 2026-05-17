@@ -105,6 +105,13 @@ export default function KitchenPage() {
     updateOrderStatus(orderId, status)
     supabase.from('orders').update({ status, updated_at: new Date().toISOString() }).eq('id', orderId).then(() => {
       setDbOrders((prev) => prev.map((o) => o.id === orderId ? { ...o, status } : o))
+      // When reservation order completed → mark reservation as completed
+      if (status === 'completed') {
+        const order = dbOrders.find((o) => o.id === orderId)
+        if (order?.reservationId) {
+          supabase.from('reservations').update({ status: 'completed' }).eq('id', order.reservationId).then(() => {})
+        }
+      }
     })
   }
 
