@@ -46,7 +46,10 @@ export default function DashboardPage() {
   const activeTableCount = [...occupiedTableNums].filter((n) => !emptySet.has(n) && !cleaningSet.has(n)).length
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
+    // UTC midnight — hindari timezone mismatch
+    const utcMidnight = new Date()
+    utcMidnight.setUTCHours(0, 0, 0, 0)
+    const since = utcMidnight.toISOString()
 
     const fetchOrders = () => {
       supabase.from('orders').select('*').order('created_at', { ascending: false })
@@ -71,7 +74,7 @@ export default function DashboardPage() {
     const fetchActiveTables = () => {
       supabase.from('orders').select('table_number')
         .in('status', ['pending', 'confirmed', 'preparing', 'ready', 'completed'])
-        .gte('created_at', today)
+        .gte('created_at', since)
         .then(({ data }) => {
           if (data) {
             setOccupiedTableNums(new Set(data.map((r: { table_number: number }) => r.table_number)))

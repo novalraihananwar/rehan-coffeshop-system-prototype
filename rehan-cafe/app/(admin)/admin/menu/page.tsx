@@ -237,9 +237,15 @@ export default function MenuPage() {
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-cafe-muted">
-                    Tentukan bahan per sajian <span className="font-semibold text-espresso-mid">ukuran M (12oz/355ml)</span> sebagai acuan. Untuk minuman, ukuran S otomatis 80% dan L otomatis 120% dari jumlah ini. Untuk makanan, jumlah bahan tidak berubah per porsi.
-                  </p>
+                  {(form.category === 'coffee' || form.category === 'non-coffee') ? (
+                    <p className="text-xs text-cafe-muted">
+                      Input jumlah bahan untuk <span className="font-semibold text-espresso-mid">ukuran M (12oz / 355ml)</span>. Ukuran S otomatis <strong>80%</strong> dan L otomatis <strong>120%</strong> dari jumlah ini saat order masuk.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-cafe-muted">
+                      Input jumlah bahan untuk <span className="font-semibold text-espresso-mid">satu porsi standar</span>. Jumlah tidak berubah terlepas dari pilihan Reguler/Besar.
+                    </p>
+                  )}
                   <div className="space-y-2">
                     {ingredientEdit.map((ing, idx) => {
                       const invItem = inventory.find((i) => i.id === ing.inventoryItemId)

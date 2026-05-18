@@ -49,14 +49,15 @@ export default function OrdersPage() {
   const [selected, setSelected] = useState<string | null>(null)
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
+    const utcMidnight = new Date()
+    utcMidnight.setUTCHours(0, 0, 0, 0)
+    const since = utcMidnight.getTime()
 
     const fetchAndDeduct = (orders: Order[]) => {
       setDbOrders(orders)
       // Deduct inventory for today's orders on admin's browser (idempotent — skip already-deducted)
       orders.forEach((o) => {
-        const orderDate = new Date(o.createdAt).toISOString().split('T')[0]
-        if (orderDate === today) deductInventory(o)
+        if (new Date(o.createdAt).getTime() >= since) deductInventory(o)
       })
     }
 

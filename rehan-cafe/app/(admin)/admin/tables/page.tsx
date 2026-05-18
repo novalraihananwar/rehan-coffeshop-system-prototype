@@ -37,15 +37,29 @@ export default function TablesPage() {
   const [reservedNums, setReservedNums] = useState<Map<number, Reservation>>(new Map())
 
   useEffect(() => {
-    const today = new Date().toISOString().split('T')[0]
+    // UTC midnight — hindari timezone mismatch (WIB = UTC+7)
+    const utcMidnight = new Date()
+    utcMidnight.setUTCHours(0, 0, 0, 0)
+    const since = utcMidnight.toISOString()
+
     const fetchActive = () => {
-      supabase.from('orders').select('table_number')
+      supabase.from('orders').select('table_number, status')
         .in('status', ['pending', 'confirmed', 'preparing', 'ready', 'completed'])
-        .gte('created_at', today)
+        .gte('created_at', since)
         .then(({ data }) => {
-          if (data) setOccupiedNums(new Set(data.map((r: { table_number: number }) => r.table_number)))
+          if (data) {
+            setOccupiedNums(new Set(data.map((r: { table_number: number }) => r.table_number)))
+            // Tabel dengan order aktif (non-completed) HARUS terisi — paksa clear override
+            const activeNums = [...new Set(
+              data
+                .filter((r: { status: string }) => r.status !== 'completed')
+                .map((r: { table_number: number }) => r.table_number)
+            )]
+            activeNums.forEach((n) => clearTableOverride(n))
+          }
         })
     }
+
     const fetchReservations = () => {
       const today = new Date().toISOString().split('T')[0]
       supabase.from('reservations').select('*').gte('date', today)
@@ -54,7 +68,6 @@ export default function TablesPage() {
         .then(({ data }) => {
           if (data) {
             setReservations(data as Reservation[])
-            // Only mark as reserved if status is still 'confirmed' (not 'arrived' or 'completed')
             const map = new Map<number, Reservation>()
             ;(data as Reservation[]).filter((r) => r.status === 'confirmed').forEach((r) => {
               if (!map.has(r.table_number)) map.set(r.table_number, r)
@@ -63,6 +76,7 @@ export default function TablesPage() {
           }
         })
     }
+
     fetchActive()
     fetchReservations()
 
@@ -71,7 +85,7 @@ export default function TablesPage() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, fetchReservations)
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [])
+  }, [clearTableOverride])
 
   // Priority: cashier-confirmed empty > cashier cleaning > Supabase occupied > reserved
   const emptySet = new Set(tableEmptyNums)
