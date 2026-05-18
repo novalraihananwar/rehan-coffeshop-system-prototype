@@ -7,6 +7,19 @@ import { roleLabel, roleAccess } from '@/lib/mock-data/auth'
 import { mockBranches } from '@/lib/mock-data/branches'
 import { supabase } from '@/lib/supabase'
 import { UserRole } from '@/lib/types'
+import { formatTime } from '@/lib/utils/format'
+
+interface AttendanceRow {
+  id: string
+  staff_id: string
+  staff_name: string
+  staff_role: string
+  date: string
+  check_in: string | null
+  check_out: string | null
+  status: string
+  branch: string
+}
 
 interface SupabaseStaff {
   id: string
@@ -36,8 +49,11 @@ const generatePassword = (name: string): string => {
 
 export default function StaffPage() {
   const { user } = useAuthStore()
+  const [activeTab, setActiveTab] = useState<'staff' | 'absensi'>('staff')
   const [supabaseStaff, setSupabaseStaff] = useState<SupabaseStaff[]>([])
   const [loading, setLoading] = useState(true)
+  const [attendanceData, setAttendanceData] = useState<AttendanceRow[]>([])
+  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0])
   const [showAddModal, setShowAddModal] = useState(false)
   const [editStaff, setEditStaff] = useState<SupabaseStaff | null>(null)
   const [generatedCreds, setGeneratedCreds] = useState<{ email: string; password: string; name: string } | null>(null)
@@ -51,7 +67,13 @@ export default function StaffPage() {
     setLoading(false)
   }
 
+  const fetchAttendance = async (date: string) => {
+    const { data } = await supabase.from('attendance').select('*').eq('date', date).order('check_in', { ascending: true })
+    if (data) setAttendanceData(data as AttendanceRow[])
+  }
+
   useEffect(() => { fetchStaff() }, [])
+  useEffect(() => { fetchAttendance(attendanceDate) }, [attendanceDate])
 
   const totalActive = mockStaff.filter((s) => s.isActive).length + supabaseStaff.filter((s) => s.is_active).length
 
@@ -119,15 +141,105 @@ export default function StaffPage() {
       <AdminHeader title="Staff & Roles" subtitle={`${totalActive} staff aktif · ${supabaseStaff.length} ditambah via sistem`} />
       <div className="p-6">
 
-        {canManage(user?.role) && (
-          <div className="flex justify-end mb-5">
+        {/* Tabs */}
+        <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+          <div className="flex gap-2">
+            <button onClick={() => setActiveTab('staff')}
+              className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${activeTab === 'staff' ? 'bg-espresso-dark text-warm-white' : 'bg-warm-white border border-latte text-espresso-mid'}`}>
+              Daftar Staff
+            </button>
+            {canManage(user?.role) && (
+              <button onClick={() => setActiveTab('absensi')}
+                className={`px-5 py-2 rounded-full text-xs font-bold transition-all ${activeTab === 'absensi' ? 'bg-espresso-dark text-warm-white' : 'bg-warm-white border border-latte text-espresso-mid'}`}>
+                Rekap Absensi
+              </button>
+            )}
+          </div>
+          {canManage(user?.role) && activeTab === 'staff' && (
             <button onClick={() => setShowAddModal(true)}
               className="bg-espresso-dark text-warm-white text-xs font-bold px-5 py-2.5 rounded-xl flex items-center gap-2">
               + Tambah Staff Baru
             </button>
+          )}
+        </div>
+
+        {/* Tab: Rekap Absensi */}
+        {activeTab === 'absensi' && (
+          <div>
+            <div className="flex items-center gap-4 mb-5 flex-wrap">
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-semibold text-cafe-muted uppercase tracking-wider">Tanggal</label>
+                <input type="date" value={attendanceDate} onChange={(e) => setAttendanceDate(e.target.value)}
+                  className="border border-latte rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-espresso-light" />
+              </div>
+              <div className="flex gap-3 text-xs">
+                <span className="bg-olive-sage/10 text-olive-sage font-bold px-3 py-1 rounded-full">
+                  Hadir: {attendanceData.filter(a => a.status === 'present').length}
+                </span>
+                <span className="bg-amber-50 text-amber-700 font-bold px-3 py-1 rounded-full">
+                  Terlambat: {attendanceData.filter(a => a.status === 'late').length}
+                </span>
+                <span className="bg-red-50 text-red-500 font-bold px-3 py-1 rounded-full">
+                  Absen: {(mockStaff.length + supabaseStaff.filter(s => s.is_active).length) - attendanceData.length}
+                </span>
+              </div>
+            </div>
+
+            {attendanceData.length === 0 ? (
+              <div className="bg-warm-white rounded-2xl p-8 text-center border border-latte/40">
+                <p className="text-3xl mb-2">📋</p>
+                <p className="text-cafe-muted text-sm">Belum ada data absensi untuk tanggal ini</p>
+              </div>
+            ) : (
+              <div className="bg-warm-white rounded-2xl shadow-warm-sm border border-latte/40 overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-latte">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-cafe-muted uppercase tracking-wider">Staff</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-cafe-muted uppercase tracking-wider">Check In</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-cafe-muted uppercase tracking-wider">Check Out</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-cafe-muted uppercase tracking-wider">Durasi</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-cafe-muted uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendanceData.map((att) => {
+                      const cin = att.check_in ? new Date(att.check_in) : null
+                      const cout = att.check_out ? new Date(att.check_out) : null
+                      const durMins = cin && cout ? Math.round((cout.getTime() - cin.getTime()) / 60000) : null
+                      const durStr = durMins !== null
+                        ? (durMins >= 60 ? `${Math.floor(durMins / 60)}j ${durMins % 60}m` : `${durMins}m`)
+                        : '—'
+                      return (
+                        <tr key={att.id} className="border-b border-latte/30 hover:bg-cream-base/50">
+                          <td className="px-4 py-3">
+                            <p className="font-semibold text-espresso-deep text-sm">{att.staff_name}</p>
+                            <p className="text-cafe-muted text-xs capitalize">{roleLabel[att.staff_role as UserRole] || att.staff_role}</p>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-espresso-deep">{cin ? formatTime(cin) : '—'}</td>
+                          <td className="px-4 py-3 text-sm text-espresso-deep">{cout ? formatTime(cout) : <span className="text-amber-600 text-xs font-semibold">Belum checkout</span>}</td>
+                          <td className="px-4 py-3 text-sm text-cafe-muted">{durStr}</td>
+                          <td className="px-4 py-3 text-center">
+                            <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                              att.status === 'present' ? 'bg-olive-sage/10 text-olive-sage' :
+                              att.status === 'late' ? 'bg-amber-50 text-amber-700' :
+                              'bg-red-50 text-red-500'
+                            }`}>
+                              {att.status === 'present' ? 'Hadir' : att.status === 'late' ? 'Terlambat' : 'Absen'}
+                            </span>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
+        {/* Tab: Daftar Staff */}
+        {activeTab === 'staff' && <>
         {/* Supabase Staff (bisa dikelola) */}
         {supabaseStaff.length > 0 && (
           <div className="mb-6">
@@ -176,7 +288,7 @@ export default function StaffPage() {
         )}
 
         {/* Mock Staff (legacy, read-only) */}
-        <div>
+        {activeTab === 'staff' && <div>
           <p className="text-xs font-bold text-cafe-muted uppercase tracking-wider mb-3">Staff Default Sistem ({mockStaff.length})</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {mockStaff.map((staff) => (
@@ -204,7 +316,8 @@ export default function StaffPage() {
               </div>
             ))}
           </div>
-        </div>
+        </div>}
+        </>}
       </div>
 
       {/* Modal Tambah Staff */}

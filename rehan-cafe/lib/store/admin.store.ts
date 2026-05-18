@@ -76,6 +76,9 @@ interface AdminStore {
   addTable: (table: Omit<Table, 'id' | 'status'>) => void
   removeTable: (tableId: string) => void
 
+  branchGpsSettings: Record<string, { lat: number; lng: number; radius: number; shiftStart: string }>
+  setBranchGps: (branchId: string, settings: { lat: number; lng: number; radius: number; shiftStart: string }) => void
+
   loadInventoryFromSupabase: () => Promise<void>
   seedInventoryToSupabase: () => Promise<void>
 
@@ -101,6 +104,11 @@ export const useAdminStore = create<AdminStore>()(
       tableEmptyNums: [],
       tableCleaningNums: [],
       deductedOrderIds: [],
+      branchGpsSettings: {
+        'branch-001': { lat: 0, lng: 0, radius: 200, shiftStart: '08:00' },
+        'branch-002': { lat: 0, lng: 0, radius: 200, shiftStart: '08:00' },
+        'branch-003': { lat: 0, lng: 0, radius: 200, shiftStart: '08:00' },
+      },
 
       setSelectedBranch: (branch) => set({ selectedBranch: branch }),
 
@@ -271,6 +279,9 @@ export const useAdminStore = create<AdminStore>()(
       removeTable: (tableId) =>
         set({ tables: get().tables.filter((t) => t.id !== tableId) }),
 
+      setBranchGps: (branchId, settings) =>
+        set({ branchGpsSettings: { ...get().branchGpsSettings, [branchId]: settings } }),
+
       loadInventoryFromSupabase: async () => {
         const { data } = await supabase.from('inventory').select('*').order('name')
         if (data && data.length > 0) {
@@ -320,6 +331,7 @@ export const useAdminStore = create<AdminStore>()(
         tableEmptyNums: state.tableEmptyNums,
         tableCleaningNums: state.tableCleaningNums,
         deductedOrderIds: state.deductedOrderIds,
+        branchGpsSettings: state.branchGpsSettings,
       }),
     }
   )

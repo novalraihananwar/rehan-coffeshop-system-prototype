@@ -4,6 +4,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/auth.store'
 import { useAdminStore } from '@/lib/store/admin.store'
 import Sidebar from '@/components/admin/Sidebar'
+import AttendanceBanner from '@/components/admin/AttendanceBanner'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
@@ -32,9 +33,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex h-screen bg-cream-base overflow-hidden">
       <Sidebar />
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <AttendanceBanner />
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
   )
 }
