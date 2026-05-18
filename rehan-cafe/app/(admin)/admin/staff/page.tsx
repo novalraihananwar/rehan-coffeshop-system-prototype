@@ -17,8 +17,22 @@ interface AttendanceRow {
   date: string
   check_in: string | null
   check_out: string | null
+  check_in_lat: number | null
+  check_in_lng: number | null
+  check_out_lat: number | null
+  check_out_lng: number | null
   status: string
   branch: string
+}
+
+const canSeeLocation = (role?: string) => ['super_admin', 'owner'].includes(role ?? '')
+
+function distanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLng = (lng2 - lng1) * Math.PI / 180
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)))
 }
 
 interface SupabaseStaff {
@@ -49,6 +63,7 @@ const generatePassword = (name: string): string => {
 
 export default function StaffPage() {
   const { user } = useAuthStore()
+  const showLocation = canSeeLocation(user?.role)
   const [activeTab, setActiveTab] = useState<'staff' | 'absensi'>('staff')
   const [supabaseStaff, setSupabaseStaff] = useState<SupabaseStaff[]>([])
   const [loading, setLoading] = useState(true)
@@ -200,6 +215,7 @@ export default function StaffPage() {
                       <th className="text-left px-4 py-3 text-xs font-semibold text-cafe-muted uppercase tracking-wider">Check Out</th>
                       <th className="text-left px-4 py-3 text-xs font-semibold text-cafe-muted uppercase tracking-wider">Durasi</th>
                       <th className="text-center px-4 py-3 text-xs font-semibold text-cafe-muted uppercase tracking-wider">Status</th>
+                      {showLocation && <th className="text-center px-4 py-3 text-xs font-semibold text-cafe-muted uppercase tracking-wider">Lokasi</th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -210,6 +226,8 @@ export default function StaffPage() {
                       const durStr = durMins !== null
                         ? (durMins >= 60 ? `${Math.floor(durMins / 60)}j ${durMins % 60}m` : `${durMins}m`)
                         : '—'
+                      const mapsUrl = (lat: number, lng: number) =>
+                        `https://www.google.com/maps?q=${lat},${lng}&z=18`
                       return (
                         <tr key={att.id} className="border-b border-latte/30 hover:bg-cream-base/50">
                           <td className="px-4 py-3">
@@ -217,7 +235,9 @@ export default function StaffPage() {
                             <p className="text-cafe-muted text-xs capitalize">{roleLabel[att.staff_role as UserRole] || att.staff_role}</p>
                           </td>
                           <td className="px-4 py-3 text-sm text-espresso-deep">{cin ? formatTime(cin) : '—'}</td>
-                          <td className="px-4 py-3 text-sm text-espresso-deep">{cout ? formatTime(cout) : <span className="text-amber-600 text-xs font-semibold">Belum checkout</span>}</td>
+                          <td className="px-4 py-3 text-sm text-espresso-deep">
+                            {cout ? formatTime(cout) : <span className="text-amber-600 text-xs font-semibold">Belum checkout</span>}
+                          </td>
                           <td className="px-4 py-3 text-sm text-cafe-muted">{durStr}</td>
                           <td className="px-4 py-3 text-center">
                             <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
@@ -228,6 +248,26 @@ export default function StaffPage() {
                               {att.status === 'present' ? 'Hadir' : att.status === 'late' ? 'Terlambat' : 'Absen'}
                             </span>
                           </td>
+                          {showLocation && (
+                            <td className="px-4 py-3 text-center">
+                              <div className="flex flex-col gap-1 items-center">
+                                {att.check_in_lat && att.check_in_lng ? (
+                                  <a href={mapsUrl(att.check_in_lat, att.check_in_lng)}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="text-[10px] font-bold bg-blue-50 text-blue-600 hover:bg-blue-100 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap">
+                                    📍 Masuk
+                                  </a>
+                                ) : <span className="text-[10px] text-cafe-muted">—</span>}
+                                {att.check_out_lat && att.check_out_lng && (
+                                  <a href={mapsUrl(att.check_out_lat, att.check_out_lng)}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="text-[10px] font-bold bg-olive-sage/10 text-olive-sage hover:bg-olive-sage/20 px-2.5 py-1 rounded-lg transition-colors whitespace-nowrap">
+                                    📍 Keluar
+                                  </a>
+                                )}
+                              </div>
+                            </td>
+                          )}
                         </tr>
                       )
                     })}
