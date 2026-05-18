@@ -5,7 +5,6 @@ import StatCard from '@/components/admin/StatCard'
 import { useAdminStore } from '@/lib/store/admin.store'
 import { formatRupiah, formatTime } from '@/lib/utils/format'
 import { Order } from '@/lib/types'
-import { menuItems } from '@/lib/mock-data/menu'
 import { supabase } from '@/lib/supabase'
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -16,11 +15,6 @@ const hourlyBase = Array.from({ length: 12 }, (_, i) => ({
   revenue: 0,
   orders: 0,
 }))
-
-const topMenus = menuItems
-  .filter((m) => m.isBestseller)
-  .slice(0, 5)
-  .map((m, i) => ({ name: m.name, orders: Math.floor(40 - i * 5) }))
 
 const toOrder = (row: Record<string, unknown>): Order => ({
   id: row.id as string,
@@ -41,18 +35,20 @@ const toOrder = (row: Record<string, unknown>): Order => ({
 })
 
 export default function DashboardPage() {
-  const { tables, inventory, lowStockCount, activeTablesCount } = useAdminStore()
+  const { inventory, lowStockCount } = useAdminStore()
   const [dbOrders, setDbOrders] = useState<Order[]>([])
+  const [activeTableCount, setActiveTableCount] = useState(0)
   const [chartData, setChartData] = useState(hourlyBase)
 
   useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+
     const fetchOrders = () => {
       supabase.from('orders').select('*').order('created_at', { ascending: false })
         .then(({ data }) => {
           if (data) {
             const orders = data.map(toOrder)
             setDbOrders(orders)
-            // Build hourly chart from real orders
             const hourly = Array.from({ length: 12 }, (_, i) => ({ hour: `${8 + i}:00`, revenue: 0, orders: 0 }))
             orders.forEach((o) => {
               const h = new Date(o.createdAt).getHours()
@@ -66,10 +62,27 @@ export default function DashboardPage() {
           }
         })
     }
+
+    const fetchActiveTables = () => {
+      supabase.from('orders').select('table_number')
+        .in('status', ['pending', 'confirmed', 'preparing', 'ready', 'completed'])
+        .gte('created_at', today)
+        .then(({ data }) => {
+          if (data) {
+            const unique = new Set(data.map((r: { table_number: number }) => r.table_number))
+            setActiveTableCount(unique.size)
+          }
+        })
+    }
+
     fetchOrders()
+    fetchActiveTables()
 
     const channel = supabase.channel('dashboard-orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        fetchOrders()
+        fetchActiveTables()
+      })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [])
@@ -77,6 +90,20 @@ export default function DashboardPage() {
   const todayRevenue = dbOrders.filter((o) => o.status === 'completed').reduce((s, o) => s + o.totalAmount, 0)
   const todayOrderCount = dbOrders.filter((o) => o.status !== 'cancelled').length
   const recentOrders = dbOrders.slice(0, 6)
+
+  // Hitung menu terlaris dari data real
+  const menuCount: Record<string, { name: string; count: number }> = {}
+  dbOrders.forEach((o) => {
+    o.items.forEach((item) => {
+      if (!menuCount[item.menuItemId]) {
+        menuCount[item.menuItemId] = { name: item.menuItemName, count: 0 }
+      }
+      menuCount[item.menuItemId].count += item.quantity
+    })
+  })
+  const topMenus = Object.values(menuCount)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
 
   return (
     <div className="min-h-screen">
@@ -87,7 +114,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <StatCard dark title="Total Pendapatan" value={formatRupiah(todayRevenue)} icon="💰" />
           <StatCard title="Total Order" value={String(todayOrderCount)} icon="🛒" />
-          <StatCard title="Meja Aktif" value={`${activeTablesCount()}/100`} icon="🪑" />
+          <StatCard title="Meja Aktif" value={`${activeTableCount}/100`} icon="🪑" />
           <StatCard title="Inventori" value={`${inventory.length} item`} icon="📦" />
           <StatCard title="Avg Order" value={todayOrderCount > 0 ? formatRupiah(Math.round(todayRevenue / todayOrderCount)) : 'Rp 0'} icon="📊" />
           {lowStockCount() > 0
@@ -124,20 +151,24 @@ export default function DashboardPage() {
 
           <div className="bg-warm-white rounded-2xl p-5 shadow-warm-sm border border-latte/40">
             <p className="font-display font-semibold text-espresso-deep mb-4">Menu Terlaris</p>
-            <div className="space-y-3">
-              {topMenus.map((m, i) => (
-                <div key={m.name} className="flex items-center gap-3">
-                  <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i === 0 ? 'bg-espresso-dark text-warm-white' : 'bg-cream-base text-espresso-mid'}`}>{i + 1}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-espresso-deep text-xs font-semibold truncate">{m.name}</p>
-                    <div className="h-1.5 bg-cream-base rounded-full mt-1 overflow-hidden">
-                      <div className="h-full bg-espresso-light rounded-full" style={{ width: `${(m.orders / topMenus[0].orders) * 100}%` }} />
+            {topMenus.length === 0 ? (
+              <p className="text-cafe-muted text-sm text-center py-8">Belum ada data order</p>
+            ) : (
+              <div className="space-y-3">
+                {topMenus.map((m, i) => (
+                  <div key={m.name} className="flex items-center gap-3">
+                    <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i === 0 ? 'bg-espresso-dark text-warm-white' : 'bg-cream-base text-espresso-mid'}`}>{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-espresso-deep text-xs font-semibold truncate">{m.name}</p>
+                      <div className="h-1.5 bg-cream-base rounded-full mt-1 overflow-hidden">
+                        <div className="h-full bg-espresso-light rounded-full" style={{ width: `${topMenus[0].count > 0 ? (m.count / topMenus[0].count) * 100 : 0}%` }} />
+                      </div>
                     </div>
+                    <span className="text-cafe-muted text-xs flex-shrink-0">{m.count}x</span>
                   </div>
-                  <span className="text-cafe-muted text-xs flex-shrink-0">{m.orders}x</span>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

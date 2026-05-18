@@ -28,19 +28,20 @@ const statusConfig: Record<TableStatus, { label: string; color: string; bg: stri
 }
 
 export default function TablesPage() {
-  const { tables, updateTableStatus } = useAdminStore()
+  const { tables, updateTableStatus, tableEmptyNums, tableCleaningNums, markTableEmpty, markTableCleaning, clearTableOverride } = useAdminStore()
   const [selected, setSelected] = useState<string | null>(null)
   const [sectionFilter, setSectionFilter] = useState<string>('all')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [tab, setTab] = useState<'tables' | 'reservations'>('tables')
   const [occupiedNums, setOccupiedNums] = useState<Set<number>>(new Set())
   const [reservedNums, setReservedNums] = useState<Map<number, Reservation>>(new Map())
-  const [cleaningNums, setCleaningNums] = useState<Set<number>>(new Set())
-  const [emptyOverrides, setEmptyOverrides] = useState<Set<number>>(new Set())
 
   useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
     const fetchActive = () => {
-      supabase.from('orders').select('table_number').in('status', ['confirmed', 'preparing', 'ready'])
+      supabase.from('orders').select('table_number')
+        .in('status', ['pending', 'confirmed', 'preparing', 'ready', 'completed'])
+        .gte('created_at', today)
         .then(({ data }) => {
           if (data) setOccupiedNums(new Set(data.map((r: { table_number: number }) => r.table_number)))
         })
@@ -72,10 +73,12 @@ export default function TablesPage() {
     return () => { supabase.removeChannel(channel) }
   }, [])
 
-  // Local overrides take priority: empty > cleaning > Supabase occupied > reserved
+  // Priority: cashier-confirmed empty > cashier cleaning > Supabase occupied > reserved
+  const emptySet = new Set(tableEmptyNums)
+  const cleaningSet = new Set(tableCleaningNums)
   const mergedTables = tables.map((t) => {
-    if (emptyOverrides.has(t.number)) return { ...t, status: 'empty' as TableStatus }
-    if (cleaningNums.has(t.number)) return { ...t, status: 'cleaning' as TableStatus }
+    if (emptySet.has(t.number)) return { ...t, status: 'empty' as TableStatus }
+    if (cleaningSet.has(t.number)) return { ...t, status: 'cleaning' as TableStatus }
     if (occupiedNums.has(t.number)) return { ...t, status: 'occupied' as TableStatus }
     if (reservedNums.has(t.number)) return { ...t, status: 'reserved' as TableStatus }
     return { ...t, status: 'empty' as TableStatus }
@@ -92,15 +95,13 @@ export default function TablesPage() {
   }
 
   const handleMarkCleaning = (tableNumber: number) => {
-    setCleaningNums((prev) => new Set([...prev, tableNumber]))
+    markTableCleaning(tableNumber)
     setOccupiedNums((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
-    setEmptyOverrides((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
     setSelected(null)
   }
 
   const handleMarkEmpty = (tableNumber: number) => {
-    setEmptyOverrides((prev) => new Set([...prev, tableNumber]))
-    setCleaningNums((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
+    markTableEmpty(tableNumber)
     setOccupiedNums((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
     setSelected(null)
   }
@@ -109,7 +110,7 @@ export default function TablesPage() {
     const rsv = reservedNums.get(tableNumber)
     setOccupiedNums((prev) => new Set([...prev, tableNumber]))
     setReservedNums((prev) => { const m = new Map(prev); m.delete(tableNumber); return m })
-    setEmptyOverrides((prev) => { const s = new Set(prev); s.delete(tableNumber); return s })
+    clearTableOverride(tableNumber)
 
     if (rsv) {
       supabase.from('reservations').update({ status: 'arrived' }).eq('id', rsv.id).then(() => {

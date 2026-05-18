@@ -145,8 +145,8 @@ export default function OrdersPage() {
                         e.stopPropagation()
                         const next = nextStatus[order.status]!
                         updateOrderStatus(order.id, next)
+                        setDbOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, status: next, updatedAt: new Date() } : o))
                         supabase.from('orders').update({ status: next, updated_at: new Date().toISOString() }).eq('id', order.id).then(() => {
-                          // When reservation order completed → mark reservation as completed
                           if (next === 'completed' && order.reservationId) {
                             supabase.from('reservations').update({ status: 'completed' }).eq('id', order.reservationId).then(() => {})
                           }

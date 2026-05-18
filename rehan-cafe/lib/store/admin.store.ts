@@ -1,36 +1,23 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { Order, Table, InventoryItem, ActivityLog, OrderStatus } from '../types'
+import { Order, Table, InventoryItem, ActivityLog, OrderStatus, MenuItem, Supplier } from '../types'
 import { mockTables } from '../mock-data/tables'
 import { mockInventory } from '../mock-data/inventory'
-
-// Simple ingredient deduction per order item (units match inventory)
-const DEDUCTIONS: Record<string, { id: string; amount: number }[]> = {
-  coffee: [{ id: 'inv-001', amount: 18 }, { id: 'inv-002', amount: 200 }, { id: 'inv-008', amount: 1 }],
-  latte: [{ id: 'inv-001', amount: 18 }, { id: 'inv-002', amount: 250 }, { id: 'inv-008', amount: 1 }],
-  mocha: [{ id: 'inv-001', amount: 18 }, { id: 'inv-002', amount: 200 }, { id: 'inv-005', amount: 20 }, { id: 'inv-008', amount: 1 }],
-  matcha: [{ id: 'inv-004', amount: 15 }, { id: 'inv-002', amount: 250 }, { id: 'inv-008', amount: 1 }],
-  chocolate: [{ id: 'inv-005', amount: 25 }, { id: 'inv-002', amount: 200 }, { id: 'inv-008', amount: 1 }],
-  chicken: [{ id: 'inv-012', amount: 150 }, { id: 'inv-011', amount: 1 }],
-  default: [{ id: 'inv-006', amount: 10 }, { id: 'inv-011', amount: 1 }],
-}
-
-function getDeductionKey(menuItemId: string): string {
-  if (menuItemId.includes('matcha')) return 'matcha'
-  if (menuItemId.includes('mocha') || menuItemId.includes('chocolate')) return 'mocha'
-  if (menuItemId.includes('latte') || menuItemId.includes('coffee') || menuItemId.includes('brew') || menuItemId.includes('cappuccino') || menuItemId.includes('espresso')) return 'latte'
-  if (menuItemId.includes('chicken') || menuItemId.includes('katsu')) return 'chicken'
-  return 'default'
-}
+import { menuItems as mockMenuItems } from '../mock-data/menu'
+import { mockSuppliers } from '../mock-data/suppliers'
 
 interface AdminStore {
   orders: Order[]
   tables: Table[]
   inventory: InventoryItem[]
+  menuItems: MenuItem[]
+  suppliers: Supplier[]
   activityLog: ActivityLog[]
   selectedBranch: string
   notifications: string[]
+  tableEmptyNums: number[]
+  tableCleaningNums: number[]
 
   setSelectedBranch: (branch: string) => void
   updateOrderStatus: (orderId: string, status: OrderStatus) => void
@@ -40,6 +27,22 @@ interface AdminStore {
   clearNotification: (index: number) => void
   addIncomingOrder: (order: Order) => void
   deductInventory: (order: Order) => void
+
+  addInventoryItem: (item: InventoryItem) => void
+  updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => void
+
+  addMenuItem: (item: MenuItem) => void
+  updateMenuItem: (id: string, updates: Partial<MenuItem>) => void
+  toggleMenuAvailable: (id: string) => void
+
+  addSupplier: (supplier: Supplier) => void
+  updateSupplier: (id: string, updates: Partial<Supplier>) => void
+
+  markTableEmpty: (tableNumber: number) => void
+  markTableCleaning: (tableNumber: number) => void
+  clearTableOverride: (tableNumber: number) => void
+
+  syncWithMockData: () => void
 
   todayRevenue: () => number
   todayOrders: () => number
@@ -53,9 +56,13 @@ export const useAdminStore = create<AdminStore>()(
       orders: [],
       tables: [...mockTables],
       inventory: [...mockInventory],
+      menuItems: [...mockMenuItems],
+      suppliers: [...mockSuppliers],
       activityLog: [],
       selectedBranch: 'branch-001',
       notifications: [],
+      tableEmptyNums: [],
+      tableCleaningNums: [],
 
       setSelectedBranch: (branch) => set({ selectedBranch: branch }),
 
@@ -68,7 +75,9 @@ export const useAdminStore = create<AdminStore>()(
 
       updateTableStatus: (tableId, status) =>
         set({
-          tables: get().tables.map((t) => (t.id === tableId ? { ...t, status, currentOrderId: status === 'empty' ? undefined : t.currentOrderId } : t)),
+          tables: get().tables.map((t) =>
+            t.id === tableId ? { ...t, status, currentOrderId: status === 'empty' ? undefined : t.currentOrderId } : t
+          ),
         }),
 
       addActivity: (log) =>
@@ -86,12 +95,14 @@ export const useAdminStore = create<AdminStore>()(
         set({ notifications: get().notifications.filter((_, i) => i !== index) }),
 
       addIncomingOrder: (order) => {
-        const { orders, tables } = get()
+        const { orders, tables, tableEmptyNums, tableCleaningNums } = get()
         set({
           orders: [order, ...orders],
           tables: tables.map((t) =>
             t.id === order.tableId ? { ...t, status: 'occupied', currentOrderId: order.id } : t
           ),
+          tableEmptyNums: tableEmptyNums.filter((n) => n !== order.tableNumber),
+          tableCleaningNums: tableCleaningNums.filter((n) => n !== order.tableNumber),
         })
         get().addActivity({
           userId: 'system', userName: 'System', userRole: 'cashier',
@@ -103,27 +114,116 @@ export const useAdminStore = create<AdminStore>()(
       },
 
       deductInventory: (order) => {
-        const inventory = [...get().inventory]
+        const { inventory, menuItems } = get()
+        const inv = [...inventory]
         order.items.forEach((item) => {
-          const key = getDeductionKey(item.menuItemId)
-          const deductions = DEDUCTIONS[key] || DEDUCTIONS.default
-          deductions.forEach(({ id, amount }) => {
-            const idx = inventory.findIndex((i) => i.id === id)
-            if (idx >= 0) {
-              inventory[idx] = {
-                ...inventory[idx],
-                currentStock: Math.max(0, inventory[idx].currentStock - amount * item.quantity),
+          const menu = menuItems.find((m) => m.id === item.menuItemId)
+          const ingredients = menu?.ingredients
+          if (ingredients && ingredients.length > 0) {
+            ingredients.forEach(({ inventoryItemId, amount }) => {
+              const idx = inv.findIndex((i) => i.id === inventoryItemId)
+              if (idx >= 0) {
+                inv[idx] = {
+                  ...inv[idx],
+                  currentStock: Math.max(0, inv[idx].currentStock - amount * item.quantity),
+                }
               }
+            })
+          } else {
+            const key = item.menuItemId.includes('matcha') ? 'matcha'
+              : item.menuItemId.includes('mocha') || item.menuItemId.includes('chocolate') ? 'mocha'
+              : item.menuItemId.includes('latte') || item.menuItemId.includes('coffee') || item.menuItemId.includes('brew') || item.menuItemId.includes('cappuccino') || item.menuItemId.includes('espresso') ? 'latte'
+              : item.menuItemId.includes('chicken') || item.menuItemId.includes('katsu') ? 'chicken'
+              : 'default'
+            const fallback: Record<string, { id: string; amount: number }[]> = {
+              coffee: [{ id: 'inv-001', amount: 18 }, { id: 'inv-002', amount: 200 }, { id: 'inv-008', amount: 1 }],
+              latte: [{ id: 'inv-001', amount: 18 }, { id: 'inv-002', amount: 250 }, { id: 'inv-008', amount: 1 }],
+              mocha: [{ id: 'inv-001', amount: 18 }, { id: 'inv-002', amount: 200 }, { id: 'inv-005', amount: 20 }, { id: 'inv-008', amount: 1 }],
+              matcha: [{ id: 'inv-004', amount: 15 }, { id: 'inv-002', amount: 250 }, { id: 'inv-008', amount: 1 }],
+              chicken: [{ id: 'inv-012', amount: 150 }, { id: 'inv-011', amount: 1 }],
+              default: [{ id: 'inv-006', amount: 10 }, { id: 'inv-011', amount: 1 }],
             }
-          })
+            const deductions = fallback[key] || fallback.default
+            deductions.forEach(({ id, amount }) => {
+              const idx = inv.findIndex((i) => i.id === id)
+              if (idx >= 0) {
+                inv[idx] = {
+                  ...inv[idx],
+                  currentStock: Math.max(0, inv[idx].currentStock - amount * item.quantity),
+                }
+              }
+            })
+          }
         })
-        set({ inventory })
+        set({ inventory: inv })
+      },
+
+      addInventoryItem: (item) =>
+        set({ inventory: [...get().inventory, item] }),
+
+      updateInventoryItem: (id, updates) =>
+        set({
+          inventory: get().inventory.map((i) => (i.id === id ? { ...i, ...updates } : i)),
+        }),
+
+      addMenuItem: (item) =>
+        set({ menuItems: [...get().menuItems, item] }),
+
+      updateMenuItem: (id, updates) =>
+        set({
+          menuItems: get().menuItems.map((m) => (m.id === id ? { ...m, ...updates } : m)),
+        }),
+
+      toggleMenuAvailable: (id) =>
+        set({
+          menuItems: get().menuItems.map((m) =>
+            m.id === id ? { ...m, isAvailable: !m.isAvailable } : m
+          ),
+        }),
+
+      addSupplier: (supplier) =>
+        set({ suppliers: [...get().suppliers, supplier] }),
+
+      updateSupplier: (id, updates) =>
+        set({
+          suppliers: get().suppliers.map((s) => (s.id === id ? { ...s, ...updates } : s)),
+        }),
+
+      markTableEmpty: (tableNumber) =>
+        set({
+          tableEmptyNums: [...get().tableEmptyNums.filter((n) => n !== tableNumber), tableNumber],
+          tableCleaningNums: get().tableCleaningNums.filter((n) => n !== tableNumber),
+        }),
+
+      markTableCleaning: (tableNumber) =>
+        set({
+          tableCleaningNums: [...get().tableCleaningNums.filter((n) => n !== tableNumber), tableNumber],
+          tableEmptyNums: get().tableEmptyNums.filter((n) => n !== tableNumber),
+        }),
+
+      clearTableOverride: (tableNumber) =>
+        set({
+          tableEmptyNums: get().tableEmptyNums.filter((n) => n !== tableNumber),
+          tableCleaningNums: get().tableCleaningNums.filter((n) => n !== tableNumber),
+        }),
+
+      syncWithMockData: () => {
+        const { inventory, menuItems, suppliers } = get()
+        const storedInvIds = new Set(inventory.map((i) => i.id))
+        const newInv = mockInventory.filter((i) => !storedInvIds.has(i.id))
+        const storedMenuIds = new Set(menuItems.map((m) => m.id))
+        const newMenus = mockMenuItems.filter((m) => !storedMenuIds.has(m.id))
+        const storedSupIds = new Set(suppliers.map((s) => s.id))
+        const newSups = mockSuppliers.filter((s) => !storedSupIds.has(s.id))
+        const updates: Partial<AdminStore> = {}
+        if (newInv.length > 0) updates.inventory = [...inventory, ...newInv]
+        if (newMenus.length > 0) updates.menuItems = [...menuItems, ...newMenus]
+        if (newSups.length > 0) updates.suppliers = [...suppliers, ...newSups]
+        if (Object.keys(updates).length > 0) set(updates as Partial<ReturnType<typeof get>>)
       },
 
       todayRevenue: () =>
-        get().orders
-          .filter((o) => o.status === 'completed')
-          .reduce((sum, o) => sum + o.totalAmount, 0),
+        get().orders.filter((o) => o.status === 'completed').reduce((sum, o) => sum + o.totalAmount, 0),
 
       todayOrders: () => get().orders.filter((o) => o.status !== 'cancelled').length,
 
@@ -133,7 +233,14 @@ export const useAdminStore = create<AdminStore>()(
     }),
     {
       name: 'rehan-cafe-admin',
-      partialize: (state) => ({ tables: state.tables, inventory: state.inventory }),
+      partialize: (state) => ({
+        tables: state.tables,
+        inventory: state.inventory,
+        menuItems: state.menuItems,
+        suppliers: state.suppliers,
+        tableEmptyNums: state.tableEmptyNums,
+        tableCleaningNums: state.tableCleaningNums,
+      }),
     }
   )
 )

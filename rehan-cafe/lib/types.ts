@@ -7,6 +7,11 @@ export type OrderType = 'dine_in' | 'takeaway' | 'preorder' | 'reservation'
 export type LoyaltyTier = 'bronze' | 'silver' | 'gold'
 export type PaymentMethod = 'qris' | 'gopay' | 'ovo' | 'dana' | 'debit' | 'credit' | 'cash' | 'cashier'
 
+export interface MenuIngredient {
+  inventoryItemId: string
+  amount: number
+}
+
 export interface MenuItem {
   id: string
   name: string
@@ -23,6 +28,7 @@ export interface MenuItem {
   tags: string[]
   pairsWith: string[]
   preparationTime: number // minutes
+  ingredients?: MenuIngredient[]
 }
 
 export interface CartItem {

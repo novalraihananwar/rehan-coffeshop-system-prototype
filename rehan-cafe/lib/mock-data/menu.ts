@@ -11,6 +11,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 32000, M: 38000, L: 44000 },
     rating: 4.8, reviewCount: 342, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Bestseller', 'Sweet'], pairsWith: ['croffle', 'cheesecake'], preparationTime: 5,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-002', amount: 250 },
+      { inventoryItemId: 'inv-003', amount: 20 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'spanish-latte',
@@ -21,6 +27,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 35000, M: 42000, L: 48000 },
     rating: 4.9, reviewCount: 489, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Bestseller', 'Bold'], pairsWith: ['croissant-sandwich', 'truffle-fries'], preparationTime: 5,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-002', amount: 200 },
+      { inventoryItemId: 'inv-019', amount: 30 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'americano',
@@ -31,6 +43,10 @@ export const menuItems: MenuItem[] = [
     prices: { S: 22000, M: 28000, L: 34000 },
     rating: 4.6, reviewCount: 201, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Black Coffee', 'Pure'], pairsWith: ['croissant-sandwich'], preparationTime: 4,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'cappuccino',
@@ -41,6 +57,11 @@ export const menuItems: MenuItem[] = [
     prices: { S: 26000, M: 32000, L: 38000 },
     rating: 4.7, reviewCount: 178, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Classic'], pairsWith: ['cheesecake', 'croffle'], preparationTime: 5,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-002', amount: 150 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'matcha-latte',
@@ -51,6 +72,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 33000, M: 40000, L: 46000 },
     rating: 4.8, reviewCount: 267, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Bestseller', 'Matcha'], pairsWith: ['cheesecake', 'croffle'], preparationTime: 5,
+    ingredients: [
+      { inventoryItemId: 'inv-004', amount: 15 },
+      { inventoryItemId: 'inv-010', amount: 250 },
+      { inventoryItemId: 'inv-006', amount: 10 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'vanilla-latte',
@@ -61,6 +88,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 31000, M: 38000, L: 44000 },
     rating: 4.7, reviewCount: 156, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Sweet', 'Smooth'], pairsWith: ['croffle', 'tiramisu'], preparationTime: 5,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-002', amount: 250 },
+      { inventoryItemId: 'inv-009', amount: 20 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'hazelnut-latte',
@@ -71,6 +104,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 31000, M: 38000, L: 44000 },
     rating: 4.6, reviewCount: 134, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Nutty', 'Warm'], pairsWith: ['croissant-sandwich'], preparationTime: 5,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-002', amount: 250 },
+      { inventoryItemId: 'inv-013', amount: 20 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'cafe-mocha',
@@ -81,6 +120,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 33000, M: 40000, L: 46000 },
     rating: 4.7, reviewCount: 198, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Chocolate', 'Rich'], pairsWith: ['chocolate-lava', 'cheesecake'], preparationTime: 6,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-002', amount: 200 },
+      { inventoryItemId: 'inv-005', amount: 25 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'butterscotch-latte',
@@ -91,6 +136,13 @@ export const menuItems: MenuItem[] = [
     prices: { S: 34000, M: 40000, L: 47000 },
     rating: 4.9, reviewCount: 312, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Signature', 'Bestseller'], pairsWith: ['croffle', 'cheesecake'], preparationTime: 6,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-002', amount: 250 },
+      { inventoryItemId: 'inv-003', amount: 20 },
+      { inventoryItemId: 'inv-006', amount: 5 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'affogato',
@@ -101,6 +153,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 40000, M: 45000, L: 52000 },
     rating: 4.8, reviewCount: 223, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Dessert Coffee', 'Unique'], pairsWith: ['chocolate-lava'], preparationTime: 4,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 25 },
+      { inventoryItemId: 'inv-002', amount: 100 },
+      { inventoryItemId: 'inv-009', amount: 10 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'v60-manual-brew',
@@ -111,6 +169,10 @@ export const menuItems: MenuItem[] = [
     prices: { S: 30000, M: 35000, L: 42000 },
     rating: 4.7, reviewCount: 89, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Manual Brew', 'Specialty'], pairsWith: ['croissant-sandwich'], preparationTime: 8,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 20 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'cold-brew',
@@ -121,6 +183,11 @@ export const menuItems: MenuItem[] = [
     prices: { S: 32000, M: 38000, L: 44000 },
     rating: 4.6, reviewCount: 145, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Cold', 'Smooth'], pairsWith: ['truffle-fries'], preparationTime: 2,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 22 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+      { inventoryItemId: 'inv-011', amount: 1 },
+    ],
   },
 
   // === NON-COFFEE ===
@@ -133,6 +200,13 @@ export const menuItems: MenuItem[] = [
     prices: { S: 32000, M: 38000, L: 44000 },
     rating: 4.8, reviewCount: 234, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Chocolate', 'No Coffee'], pairsWith: ['croffle', 'chocolate-lava'], preparationTime: 5,
+    ingredients: [
+      { inventoryItemId: 'inv-005', amount: 30 },
+      { inventoryItemId: 'inv-002', amount: 200 },
+      { inventoryItemId: 'inv-006', amount: 10 },
+      { inventoryItemId: 'inv-020', amount: 30 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'lychee-tea',
@@ -143,6 +217,13 @@ export const menuItems: MenuItem[] = [
     prices: { S: 27000, M: 32000, L: 38000 },
     rating: 4.6, reviewCount: 167, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Tea', 'Fruity', 'No Coffee'], pairsWith: ['truffle-fries', 'chicken-katsu'], preparationTime: 4,
+    ingredients: [
+      { inventoryItemId: 'inv-014', amount: 5 },
+      { inventoryItemId: 'inv-003', amount: 20 },
+      { inventoryItemId: 'inv-006', amount: 10 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+      { inventoryItemId: 'inv-011', amount: 1 },
+    ],
   },
   {
     id: 'peach-tea',
@@ -153,6 +234,13 @@ export const menuItems: MenuItem[] = [
     prices: { S: 27000, M: 32000, L: 38000 },
     rating: 4.5, reviewCount: 143, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Tea', 'Fruity', 'No Coffee'], pairsWith: ['cheesecake'], preparationTime: 4,
+    ingredients: [
+      { inventoryItemId: 'inv-014', amount: 5 },
+      { inventoryItemId: 'inv-009', amount: 20 },
+      { inventoryItemId: 'inv-006', amount: 10 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+      { inventoryItemId: 'inv-011', amount: 1 },
+    ],
   },
   {
     id: 'mojito-lychee',
@@ -163,6 +251,13 @@ export const menuItems: MenuItem[] = [
     prices: { S: 30000, M: 35000, L: 42000 },
     rating: 4.7, reviewCount: 189, isAvailable: true, isBestseller: false, isNew: true, isPromo: false,
     tags: ['New', 'Refreshing', 'No Coffee'], pairsWith: ['truffle-fries', 'chicken-katsu'], preparationTime: 5,
+    ingredients: [
+      { inventoryItemId: 'inv-014', amount: 5 },
+      { inventoryItemId: 'inv-003', amount: 20 },
+      { inventoryItemId: 'inv-006', amount: 15 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+      { inventoryItemId: 'inv-011', amount: 1 },
+    ],
   },
   {
     id: 'strawberry-milk',
@@ -173,6 +268,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 30000, M: 35000, L: 42000 },
     rating: 4.6, reviewCount: 121, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Fruity', 'No Coffee'], pairsWith: ['cheesecake', 'croffle'], preparationTime: 5,
+    ingredients: [
+      { inventoryItemId: 'inv-002', amount: 250 },
+      { inventoryItemId: 'inv-006', amount: 15 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+      { inventoryItemId: 'inv-011', amount: 1 },
+    ],
   },
 
   // === FOOD ===
@@ -185,6 +286,11 @@ export const menuItems: MenuItem[] = [
     prices: { S: 48000, M: 55000, L: 62000 },
     rating: 4.7, reviewCount: 298, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Bestseller', 'Chicken'], pairsWith: ['lychee-tea', 'americano'], preparationTime: 15,
+    ingredients: [
+      { inventoryItemId: 'inv-012', amount: 150 },
+      { inventoryItemId: 'inv-018', amount: 30 },
+      { inventoryItemId: 'inv-006', amount: 5 },
+    ],
   },
   {
     id: 'creamy-pasta',
@@ -195,6 +301,11 @@ export const menuItems: MenuItem[] = [
     prices: { S: 50000, M: 58000, L: 65000 },
     rating: 4.6, reviewCount: 187, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Pasta', 'Creamy'], pairsWith: ['americano', 'cappuccino'], preparationTime: 18,
+    ingredients: [
+      { inventoryItemId: 'inv-015', amount: 150 },
+      { inventoryItemId: 'inv-002', amount: 150 },
+      { inventoryItemId: 'inv-006', amount: 5 },
+    ],
   },
   {
     id: 'spaghetti-bolognese',
@@ -205,6 +316,11 @@ export const menuItems: MenuItem[] = [
     prices: { S: 50000, M: 58000, L: 65000 },
     rating: 4.5, reviewCount: 156, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Pasta', 'Beef'], pairsWith: ['americano'], preparationTime: 15,
+    ingredients: [
+      { inventoryItemId: 'inv-015', amount: 150 },
+      { inventoryItemId: 'inv-016', amount: 120 },
+      { inventoryItemId: 'inv-006', amount: 5 },
+    ],
   },
   {
     id: 'truffle-fries',
@@ -215,6 +331,10 @@ export const menuItems: MenuItem[] = [
     prices: { S: 38000, M: 45000, L: 52000 },
     rating: 4.8, reviewCount: 356, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Bestseller', 'Snack', 'Truffle'], pairsWith: ['caramel-latte', 'spanish-latte'], preparationTime: 10,
+    ingredients: [
+      { inventoryItemId: 'inv-017', amount: 200 },
+      { inventoryItemId: 'inv-006', amount: 5 },
+    ],
   },
   {
     id: 'croissant-sandwich',
@@ -225,6 +345,11 @@ export const menuItems: MenuItem[] = [
     prices: { S: 45000, M: 52000, L: 59000 },
     rating: 4.7, reviewCount: 223, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Sandwich', 'Breakfast'], pairsWith: ['americano', 'vanilla-latte'], preparationTime: 10,
+    ingredients: [
+      { inventoryItemId: 'inv-012', amount: 80 },
+      { inventoryItemId: 'inv-002', amount: 50 },
+      { inventoryItemId: 'inv-006', amount: 5 },
+    ],
   },
   {
     id: 'beef-blackpepper-rice',
@@ -235,6 +360,10 @@ export const menuItems: MenuItem[] = [
     prices: { S: 58000, M: 65000, L: 72000 },
     rating: 4.6, reviewCount: 167, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Beef', 'Rice', 'Spicy'], pairsWith: ['lychee-tea', 'peach-tea'], preparationTime: 20,
+    ingredients: [
+      { inventoryItemId: 'inv-016', amount: 150 },
+      { inventoryItemId: 'inv-006', amount: 10 },
+    ],
   },
   {
     id: 'chicken-salted-egg',
@@ -245,6 +374,11 @@ export const menuItems: MenuItem[] = [
     prices: { S: 55000, M: 62000, L: 70000 },
     rating: 4.8, reviewCount: 278, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Bestseller', 'Chicken', 'Viral'], pairsWith: ['peach-tea', 'lychee-tea'], preparationTime: 18,
+    ingredients: [
+      { inventoryItemId: 'inv-012', amount: 150 },
+      { inventoryItemId: 'inv-018', amount: 25 },
+      { inventoryItemId: 'inv-002', amount: 80 },
+    ],
   },
   {
     id: 'salmon-rice-bowl',
@@ -255,6 +389,9 @@ export const menuItems: MenuItem[] = [
     prices: { S: 65000, M: 72000, L: 82000 },
     rating: 4.7, reviewCount: 134, isAvailable: true, isBestseller: false, isNew: true, isPromo: false,
     tags: ['New', 'Salmon', 'Healthy'], pairsWith: ['peach-tea', 'matcha-latte'], preparationTime: 15,
+    ingredients: [
+      { inventoryItemId: 'inv-006', amount: 10 },
+    ],
   },
 
   // === DESSERT ===
@@ -267,6 +404,10 @@ export const menuItems: MenuItem[] = [
     prices: { S: 36000, M: 42000, L: 50000 },
     rating: 4.8, reviewCount: 312, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Bestseller', 'Cake'], pairsWith: ['caramel-latte', 'matcha-latte'], preparationTime: 3,
+    ingredients: [
+      { inventoryItemId: 'inv-002', amount: 100 },
+      { inventoryItemId: 'inv-006', amount: 30 },
+    ],
   },
   {
     id: 'croffle',
@@ -277,6 +418,10 @@ export const menuItems: MenuItem[] = [
     prices: { S: 32000, M: 38000, L: 45000 },
     rating: 4.9, reviewCount: 423, isAvailable: true, isBestseller: true, isNew: false, isPromo: false,
     tags: ['Bestseller', 'Signature', 'Viral'], pairsWith: ['caramel-latte', 'butterscotch-latte'], preparationTime: 8,
+    ingredients: [
+      { inventoryItemId: 'inv-002', amount: 50 },
+      { inventoryItemId: 'inv-006', amount: 15 },
+    ],
   },
   {
     id: 'tiramisu',
@@ -287,6 +432,11 @@ export const menuItems: MenuItem[] = [
     prices: { S: 38000, M: 45000, L: 52000 },
     rating: 4.7, reviewCount: 189, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Italian', 'Classic'], pairsWith: ['americano', 'cappuccino'], preparationTime: 3,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-005', amount: 20 },
+      { inventoryItemId: 'inv-006', amount: 20 },
+    ],
   },
   {
     id: 'chocolate-lava',
@@ -297,6 +447,11 @@ export const menuItems: MenuItem[] = [
     prices: { S: 40000, M: 45000, L: 52000 },
     rating: 4.8, reviewCount: 245, isAvailable: true, isBestseller: false, isNew: false, isPromo: false,
     tags: ['Chocolate', 'Warm'], pairsWith: ['affogato', 'cafe-mocha'], preparationTime: 12,
+    ingredients: [
+      { inventoryItemId: 'inv-005', amount: 35 },
+      { inventoryItemId: 'inv-006', amount: 20 },
+      { inventoryItemId: 'inv-002', amount: 50 },
+    ],
   },
 
   // === BUNDLE ===
@@ -309,6 +464,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 60000, M: 68000, L: 78000 },
     rating: 4.9, reviewCount: 567, isAvailable: true, isBestseller: true, isNew: false, isPromo: true,
     tags: ['Promo', 'Bundle', 'Best Value'], pairsWith: [], preparationTime: 10,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 18 },
+      { inventoryItemId: 'inv-002', amount: 250 },
+      { inventoryItemId: 'inv-006', amount: 20 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'dinner-couple-bundle',
@@ -319,6 +480,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 155000, M: 175000, L: 195000 },
     rating: 4.8, reviewCount: 234, isAvailable: true, isBestseller: false, isNew: false, isPromo: true,
     tags: ['Promo', 'Bundle', 'Couple'], pairsWith: [], preparationTime: 20,
+    ingredients: [
+      { inventoryItemId: 'inv-012', amount: 300 },
+      { inventoryItemId: 'inv-001', amount: 36 },
+      { inventoryItemId: 'inv-002', amount: 400 },
+      { inventoryItemId: 'inv-008', amount: 2 },
+    ],
   },
   {
     id: 'study-pack-bundle',
@@ -329,6 +496,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 72000, M: 78000, L: 88000 },
     rating: 4.7, reviewCount: 189, isAvailable: true, isBestseller: false, isNew: false, isPromo: true,
     tags: ['Promo', 'Bundle', 'Workday'], pairsWith: [], preparationTime: 12,
+    ingredients: [
+      { inventoryItemId: 'inv-001', amount: 20 },
+      { inventoryItemId: 'inv-012', amount: 80 },
+      { inventoryItemId: 'inv-002', amount: 150 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
   {
     id: 'sweet-treat-bundle',
@@ -339,6 +512,12 @@ export const menuItems: MenuItem[] = [
     prices: { S: 65000, M: 70000, L: 80000 },
     rating: 4.8, reviewCount: 156, isAvailable: true, isBestseller: false, isNew: false, isPromo: true,
     tags: ['Promo', 'Bundle', 'Sweet'], pairsWith: [], preparationTime: 8,
+    ingredients: [
+      { inventoryItemId: 'inv-004', amount: 15 },
+      { inventoryItemId: 'inv-010', amount: 250 },
+      { inventoryItemId: 'inv-006', amount: 40 },
+      { inventoryItemId: 'inv-008', amount: 1 },
+    ],
   },
 ]
 

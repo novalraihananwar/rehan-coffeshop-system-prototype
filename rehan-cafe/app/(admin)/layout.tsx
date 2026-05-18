@@ -2,16 +2,19 @@
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useAuthStore } from '@/lib/store/auth.store'
+import { useAdminStore } from '@/lib/store/admin.store'
 import Sidebar from '@/components/admin/Sidebar'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
+  const { syncWithMockData } = useAdminStore()
   const router = useRouter()
   const pathname = usePathname()
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
     setHydrated(true)
+    syncWithMockData()
   }, [])
 
   useEffect(() => {
