@@ -28,7 +28,7 @@ export default function CheckoutPage() {
 
   const { items, totalPrice, estimatedTime, notes, clearCart } = useCartStore()
   const { addOrder } = useOrderStore()
-  const { addIncomingOrder, deductInventory } = useAdminStore()
+  const { addIncomingOrder } = useAdminStore()
 
   const [selectedPayment, setSelectedPayment] = useState<PaymentMethod>('qris')
   const [showQR, setShowQR] = useState(false)
@@ -75,7 +75,6 @@ export default function CheckoutPage() {
 
     addOrder(order)
     addIncomingOrder(order)
-    deductInventory(order)
 
     await supabase.from('orders').insert({
       id: order.id,

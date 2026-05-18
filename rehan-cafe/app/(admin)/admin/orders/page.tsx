@@ -43,19 +43,30 @@ const toOrder = (row: Record<string, unknown>): Order => ({
 })
 
 export default function OrdersPage() {
-  const { orders: localOrders, updateOrderStatus } = useAdminStore()
+  const { orders: localOrders, updateOrderStatus, deductInventory } = useAdminStore()
   const [dbOrders, setDbOrders] = useState<Order[]>([])
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [selected, setSelected] = useState<string | null>(null)
 
   useEffect(() => {
+    const today = new Date().toISOString().split('T')[0]
+
+    const fetchAndDeduct = (orders: Order[]) => {
+      setDbOrders(orders)
+      // Deduct inventory for today's orders on admin's browser (idempotent — skip already-deducted)
+      orders.forEach((o) => {
+        const orderDate = new Date(o.createdAt).toISOString().split('T')[0]
+        if (orderDate === today) deductInventory(o)
+      })
+    }
+
     supabase.from('orders').select('*').order('created_at', { ascending: false })
-      .then(({ data }) => { if (data) setDbOrders(data.map(toOrder)) })
+      .then(({ data }) => { if (data) fetchAndDeduct(data.map(toOrder)) })
 
     const channel = supabase.channel('orders-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
         supabase.from('orders').select('*').order('created_at', { ascending: false })
-          .then(({ data }) => { if (data) setDbOrders(data.map(toOrder)) })
+          .then(({ data }) => { if (data) fetchAndDeduct(data.map(toOrder)) })
       })
       .subscribe()
 

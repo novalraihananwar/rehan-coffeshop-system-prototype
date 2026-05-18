@@ -18,6 +18,7 @@ interface AdminStore {
   notifications: string[]
   tableEmptyNums: number[]
   tableCleaningNums: number[]
+  deductedOrderIds: string[]
 
   setSelectedBranch: (branch: string) => void
   updateOrderStatus: (orderId: string, status: OrderStatus) => void
@@ -63,6 +64,7 @@ export const useAdminStore = create<AdminStore>()(
       notifications: [],
       tableEmptyNums: [],
       tableCleaningNums: [],
+      deductedOrderIds: [],
 
       setSelectedBranch: (branch) => set({ selectedBranch: branch }),
 
@@ -114,7 +116,8 @@ export const useAdminStore = create<AdminStore>()(
       },
 
       deductInventory: (order) => {
-        const { inventory, menuItems } = get()
+        const { inventory, menuItems, deductedOrderIds } = get()
+        if (deductedOrderIds.includes(order.id)) return
         const inv = [...inventory]
         order.items.forEach((item) => {
           const menu = menuItems.find((m) => m.id === item.menuItemId)
@@ -155,7 +158,7 @@ export const useAdminStore = create<AdminStore>()(
             })
           }
         })
-        set({ inventory: inv })
+        set({ inventory: inv, deductedOrderIds: [...deductedOrderIds, order.id] })
       },
 
       addInventoryItem: (item) =>
@@ -240,6 +243,7 @@ export const useAdminStore = create<AdminStore>()(
         suppliers: state.suppliers,
         tableEmptyNums: state.tableEmptyNums,
         tableCleaningNums: state.tableCleaningNums,
+        deductedOrderIds: state.deductedOrderIds,
       }),
     }
   )
