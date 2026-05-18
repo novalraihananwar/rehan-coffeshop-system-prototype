@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 import { formatRupiah } from '@/lib/utils/format'
 import { useOrderStore } from '@/lib/store/order.store'
+import { useCustomerAuthStore } from '@/lib/store/customer-auth.store'
 
 function SuccessContent() {
   const params = useParams()
@@ -14,7 +15,10 @@ function SuccessContent() {
   const orderNum = searchParams.get('num') || 'A-001'
   const estimatedTime = parseInt(searchParams.get('time') || '15')
   const orderId = searchParams.get('order') || ''
+  const pointsEarned = parseInt(searchParams.get('earned') || '0')
+  const pointsRedeemed = parseInt(searchParams.get('redeemed') || '0')
   const { orders } = useOrderStore()
+  const { customer } = useCustomerAuthStore()
   const order = orders.find((o) => o.id === orderId)
 
   return (
@@ -100,6 +104,26 @@ function SuccessContent() {
             </div>
           </Link>
         </div>
+
+        {/* Points earned or member prompt */}
+        {customer && pointsEarned > 0 ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}
+            className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
+            <p className="text-2xl mb-1">🎉</p>
+            <p className="font-bold text-amber-900 text-sm">+{pointsEarned} poin loyalty!</p>
+            {pointsRedeemed > 0 && <p className="text-amber-700 text-xs">({pointsRedeemed} poin digunakan sebagai diskon)</p>}
+            <p className="text-amber-700 text-xs mt-1">Total poin kamu: <strong>{customer.loyalty_points.toLocaleString('id-ID')}</strong></p>
+            <Link href="/member" className="inline-block mt-2 text-xs font-bold text-amber-800 underline">Lihat dashboard member →</Link>
+          </motion.div>
+        ) : !customer ? (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }}>
+            <Link href={`/member/register`} className="block bg-espresso-dark/5 border border-espresso-dark/15 rounded-2xl p-4 text-center">
+              <p className="text-lg mb-1">🎁</p>
+              <p className="font-semibold text-espresso-deep text-sm">Daftar Member & Kumpulkan Poin</p>
+              <p className="text-cafe-muted text-xs mt-0.5">Setiap Rp 1.000 = 1 poin · bisa ditukar diskon</p>
+            </Link>
+          </motion.div>
+        ) : null}
 
         {/* Review prompt */}
         <Link href={`/table/${tableId}/review`}>

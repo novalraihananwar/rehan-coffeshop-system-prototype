@@ -3,12 +3,14 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCartStore } from '@/lib/store/cart.store'
+import { useCustomerAuthStore } from '@/lib/store/customer-auth.store'
 import { menuItems, getMenuByCategory } from '@/lib/mock-data/menu'
 import { MenuItem, MenuCategory } from '@/lib/types'
 import MenuCard from '@/components/customer/MenuCard'
 import CategoryTabs from '@/components/customer/CategoryTabs'
 import CartBar from '@/components/customer/CartBar'
 import SplashScreen from '@/components/customer/SplashScreen'
+import Link from 'next/link'
 
 const categories = [
   { key: 'all', label: 'Semua', emoji: '✨' },
@@ -27,6 +29,7 @@ export default function MenuPage() {
   const tableNumber = parseInt(tableId.replace('table-', '')) || parseInt(tableId)
 
   const { setTable } = useCartStore()
+  const { customer } = useCustomerAuthStore()
 
   const [showSplash, setShowSplash] = useState(true)
   const [activeCategory, setActiveCategory] = useState<string>('all')
@@ -70,6 +73,31 @@ export default function MenuPage() {
               </span>
             </div>
           </div>
+
+          {/* Member Banner */}
+          {customer ? (
+            <Link href="/member" className="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🎁</span>
+                <div>
+                  <p className="text-xs font-bold text-amber-900">{customer.name}</p>
+                  <p className="text-[10px] text-amber-700">{customer.loyalty_points.toLocaleString('id-ID')} poin aktif · {customer.tier.charAt(0).toUpperCase()+customer.tier.slice(1)}</p>
+                </div>
+              </div>
+              <span className="text-amber-800 text-xs font-semibold">→</span>
+            </Link>
+          ) : (
+            <Link href={`/member/login?redirect=/table/${tableId}`} className="flex items-center justify-between bg-espresso-dark/5 border border-espresso-dark/15 rounded-xl px-3 py-2 mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-base">🎁</span>
+                <div>
+                  <p className="text-xs font-bold text-espresso-deep">Kumpulkan Poin Loyalty</p>
+                  <p className="text-[10px] text-cafe-muted">Login atau daftar sebagai member</p>
+                </div>
+              </div>
+              <span className="text-espresso-mid text-xs font-semibold">→</span>
+            </Link>
+          )}
 
           {/* Reservation Banner */}
           <a href={`/table/${tableId}/reservation`} className="flex items-center justify-between bg-espresso-dark/5 border border-espresso-dark/15 rounded-xl px-3 py-2 mb-3">
