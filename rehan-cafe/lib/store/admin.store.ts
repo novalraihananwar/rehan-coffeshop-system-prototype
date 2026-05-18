@@ -43,6 +43,9 @@ interface AdminStore {
   markTableCleaning: (tableNumber: number) => void
   clearTableOverride: (tableNumber: number) => void
 
+  addTable: (table: Omit<Table, 'id' | 'status'>) => void
+  removeTable: (tableId: string) => void
+
   syncWithMockData: () => void
 
   todayRevenue: () => number
@@ -213,6 +216,18 @@ export const useAdminStore = create<AdminStore>()(
           tableEmptyNums: get().tableEmptyNums.filter((n) => n !== tableNumber),
           tableCleaningNums: get().tableCleaningNums.filter((n) => n !== tableNumber),
         }),
+
+      addTable: (tableData) => {
+        const { tables } = get()
+        const maxNum = tables.length > 0 ? Math.max(...tables.map((t) => t.number)) : 0
+        const num = tableData.number > 0 ? tableData.number : maxNum + 1
+        const id = `table-${String(num).padStart(3, '0')}`
+        if (tables.find((t) => t.id === id || t.number === num)) return // cegah duplikat
+        set({ tables: [...tables, { ...tableData, id, number: num, status: 'empty' }] })
+      },
+
+      removeTable: (tableId) =>
+        set({ tables: get().tables.filter((t) => t.id !== tableId) }),
 
       syncWithMockData: () => {
         const { inventory, menuItems, suppliers } = get()

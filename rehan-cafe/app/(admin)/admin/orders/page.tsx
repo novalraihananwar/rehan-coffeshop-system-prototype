@@ -43,7 +43,7 @@ const toOrder = (row: Record<string, unknown>): Order => ({
 })
 
 export default function OrdersPage() {
-  const { orders: localOrders, updateOrderStatus, deductInventory } = useAdminStore()
+  const { orders: localOrders, tables, updateOrderStatus, deductInventory } = useAdminStore()
   const [dbOrders, setDbOrders] = useState<Order[]>([])
   const [filterStatus, setFilterStatus] = useState<string>('all')
   const [selected, setSelected] = useState<string | null>(null)
@@ -87,15 +87,16 @@ export default function OrdersPage() {
           <p className="text-sm font-bold text-amber-900 mb-1">Menu Digital Customer (via QR Meja)</p>
           <p className="text-xs text-amber-700 mb-3">Bagikan link ke pelanggan atau scan QR di meja</p>
           <div className="grid grid-cols-10 gap-1.5 max-h-32 overflow-y-auto">
-            {Array.from({ length: 100 }, (_, i) => i + 1).map((n) => (
+            {[...tables].sort((a, b) => a.number - b.number).map((t) => (
               <a
-                key={n}
-                href={`/table/table-${n}`}
+                key={t.id}
+                href={`/table/${t.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center bg-amber-800 hover:bg-amber-900 text-warm-white text-xs font-bold py-1.5 rounded-lg transition-colors"
+                title={`Meja ${t.number} — ${t.capacity} orang (${t.section})`}
               >
-                {n}
+                {t.number}
               </a>
             ))}
           </div>

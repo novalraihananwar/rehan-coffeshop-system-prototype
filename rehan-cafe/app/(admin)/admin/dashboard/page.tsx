@@ -35,7 +35,7 @@ const toOrder = (row: Record<string, unknown>): Order => ({
 })
 
 export default function DashboardPage() {
-  const { inventory, lowStockCount, tableEmptyNums, tableCleaningNums } = useAdminStore()
+  const { inventory, tables, lowStockCount, tableEmptyNums, tableCleaningNums } = useAdminStore()
   const [dbOrders, setDbOrders] = useState<Order[]>([])
   const [occupiedTableNums, setOccupiedTableNums] = useState<Set<number>>(new Set())
   const [chartData, setChartData] = useState(hourlyBase)
@@ -121,7 +121,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           <StatCard dark title="Total Pendapatan" value={formatRupiah(todayRevenue)} icon="💰" />
           <StatCard title="Total Order" value={String(todayOrderCount)} icon="🛒" />
-          <StatCard title="Meja Aktif" value={`${activeTableCount}/100`} icon="🪑" />
+          <StatCard title="Meja Aktif" value={`${activeTableCount}/${tables.length}`} icon="🪑" />
           <StatCard title="Inventori" value={`${inventory.length} item`} icon="📦" />
           <StatCard title="Avg Order" value={todayOrderCount > 0 ? formatRupiah(Math.round(todayRevenue / todayOrderCount)) : 'Rp 0'} icon="📊" />
           {lowStockCount() > 0
