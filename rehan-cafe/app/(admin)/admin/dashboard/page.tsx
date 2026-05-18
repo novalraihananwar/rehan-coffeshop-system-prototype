@@ -35,10 +35,15 @@ const toOrder = (row: Record<string, unknown>): Order => ({
 })
 
 export default function DashboardPage() {
-  const { inventory, lowStockCount } = useAdminStore()
+  const { inventory, lowStockCount, tableEmptyNums, tableCleaningNums } = useAdminStore()
   const [dbOrders, setDbOrders] = useState<Order[]>([])
-  const [activeTableCount, setActiveTableCount] = useState(0)
+  const [occupiedTableNums, setOccupiedTableNums] = useState<Set<number>>(new Set())
   const [chartData, setChartData] = useState(hourlyBase)
+
+  // Hitung meja aktif secara reaktif: occupied dari Supabase dikurangi yang sudah dikonfirmasi kosong/cleaning oleh kasir
+  const emptySet = new Set(tableEmptyNums)
+  const cleaningSet = new Set(tableCleaningNums)
+  const activeTableCount = [...occupiedTableNums].filter((n) => !emptySet.has(n) && !cleaningSet.has(n)).length
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0]
@@ -69,8 +74,7 @@ export default function DashboardPage() {
         .gte('created_at', today)
         .then(({ data }) => {
           if (data) {
-            const unique = new Set(data.map((r: { table_number: number }) => r.table_number))
-            setActiveTableCount(unique.size)
+            setOccupiedTableNums(new Set(data.map((r: { table_number: number }) => r.table_number)))
           }
         })
     }
