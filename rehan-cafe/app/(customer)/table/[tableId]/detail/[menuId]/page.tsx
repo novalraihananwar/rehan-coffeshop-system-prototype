@@ -9,10 +9,15 @@ import { useCartStore } from '@/lib/store/cart.store'
 import { formatRupiah } from '@/lib/utils/format'
 import MenuCard from '@/components/customer/MenuCard'
 
-const sizes: { key: MenuSize; label: string }[] = [
-  { key: 'S', label: 'Small' },
-  { key: 'M', label: 'Medium' },
-  { key: 'L', label: 'Large' },
+const drinkSizes: { key: MenuSize; label: string; oz: string; ml: string }[] = [
+  { key: 'S', label: 'Small', oz: '8oz', ml: '240ml' },
+  { key: 'M', label: 'Medium', oz: '12oz', ml: '355ml' },
+  { key: 'L', label: 'Large', oz: '16oz', ml: '470ml' },
+]
+
+const foodSizes: { key: MenuSize; label: string }[] = [
+  { key: 'S', label: 'Reguler' },
+  { key: 'L', label: 'Besar' },
 ]
 
 export default function MenuDetailPage() {
@@ -23,7 +28,9 @@ export default function MenuDetailPage() {
   const item = getMenuById(menuId)
 
   const { addItem } = useCartStore()
-  const [selectedSize, setSelectedSize] = useState<MenuSize>('M')
+  const isDrink = item?.category === 'coffee' || item?.category === 'non-coffee'
+  const isFood = item?.category === 'food' || item?.category === 'dessert'
+  const [selectedSize, setSelectedSize] = useState<MenuSize>(isFood ? 'S' : 'M')
   const [quantity, setQuantity] = useState(1)
   const [notes, setNotes] = useState('')
   const [added, setAdded] = useState(false)
@@ -76,26 +83,74 @@ export default function MenuDetailPage() {
         <p className="text-cafe-muted text-sm leading-relaxed">{item.description}</p>
 
         {/* Size Selector */}
-        <div>
-          <p className="font-display font-semibold text-espresso-deep mb-3">Pilih Ukuran</p>
-          <div className="flex gap-3">
-            {sizes.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setSelectedSize(key)}
-                className={`flex-1 py-3 rounded-xl border-2 transition-all ${
-                  selectedSize === key
-                    ? 'border-espresso-dark bg-espresso-dark text-warm-white'
-                    : 'border-latte bg-warm-white text-espresso-mid'
-                }`}
-              >
-                <p className="font-bold text-sm">{key}</p>
-                <p className="text-xs opacity-70">{label}</p>
-                <p className="font-semibold text-xs mt-1">{formatRupiah(item.prices[key])}</p>
-              </button>
-            ))}
+        {isDrink && (
+          <div>
+            <p className="font-display font-semibold text-espresso-deep mb-3">Pilih Ukuran</p>
+            <div className="flex gap-3">
+              {drinkSizes.map(({ key, label, oz, ml }) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedSize(key)}
+                  className={`flex-1 py-3 rounded-xl border-2 transition-all ${
+                    selectedSize === key
+                      ? 'border-espresso-dark bg-espresso-dark text-warm-white'
+                      : 'border-latte bg-warm-white text-espresso-mid'
+                  }`}
+                >
+                  <p className="font-bold text-sm">{key}</p>
+                  <p className="text-xs font-semibold opacity-90">{oz}</p>
+                  <p className="text-[10px] opacity-60">{ml}</p>
+                  <p className="font-semibold text-xs mt-1">{formatRupiah(item.prices[key])}</p>
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {isFood && (
+          <div>
+            <p className="font-display font-semibold text-espresso-deep mb-3">Pilih Porsi</p>
+            <div className="flex gap-3">
+              {foodSizes.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedSize(key)}
+                  className={`flex-1 py-3 rounded-xl border-2 transition-all ${
+                    selectedSize === key
+                      ? 'border-espresso-dark bg-espresso-dark text-warm-white'
+                      : 'border-latte bg-warm-white text-espresso-mid'
+                  }`}
+                >
+                  <p className="font-bold text-sm">{label}</p>
+                  <p className="font-semibold text-xs mt-1">{formatRupiah(item.prices[key])}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!isDrink && !isFood && (
+          <div>
+            <p className="font-display font-semibold text-espresso-deep mb-3">Pilih Paket</p>
+            <div className="flex gap-3">
+              {drinkSizes.map(({ key, label }) => (
+                <button
+                  key={key}
+                  onClick={() => setSelectedSize(key)}
+                  className={`flex-1 py-3 rounded-xl border-2 transition-all ${
+                    selectedSize === key
+                      ? 'border-espresso-dark bg-espresso-dark text-warm-white'
+                      : 'border-latte bg-warm-white text-espresso-mid'
+                  }`}
+                >
+                  <p className="font-bold text-sm">{key}</p>
+                  <p className="text-xs opacity-70">{label}</p>
+                  <p className="font-semibold text-xs mt-1">{formatRupiah(item.prices[key])}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Quantity */}
         <div>

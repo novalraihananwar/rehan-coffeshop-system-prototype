@@ -238,7 +238,7 @@ export default function MenuPage() {
               ) : (
                 <>
                   <p className="text-xs text-cafe-muted">
-                    Tentukan bahan yang digunakan tiap sajian (ukuran M sebagai acuan). Stok inventori akan berkurang otomatis setiap ada order.
+                    Tentukan bahan per sajian <span className="font-semibold text-espresso-mid">ukuran M (12oz/355ml)</span> sebagai acuan. Untuk minuman, ukuran S otomatis 80% dan L otomatis 120% dari jumlah ini. Untuk makanan, jumlah bahan tidak berubah per porsi.
                   </p>
                   <div className="space-y-2">
                     {ingredientEdit.map((ing, idx) => {

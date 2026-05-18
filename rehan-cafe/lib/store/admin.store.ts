@@ -119,8 +119,12 @@ export const useAdminStore = create<AdminStore>()(
         const { inventory, menuItems, deductedOrderIds } = get()
         if (deductedOrderIds.includes(order.id)) return
         const inv = [...inventory]
+        // Size multiplier hanya untuk minuman (coffee/non-coffee)
+        const sizeMultiplier: Record<string, number> = { S: 0.8, M: 1.0, L: 1.2 }
         order.items.forEach((item) => {
           const menu = menuItems.find((m) => m.id === item.menuItemId)
+          const isDrink = menu?.category === 'coffee' || menu?.category === 'non-coffee'
+          const multiplier = isDrink ? (sizeMultiplier[item.size] ?? 1.0) : 1.0
           const ingredients = menu?.ingredients
           if (ingredients && ingredients.length > 0) {
             ingredients.forEach(({ inventoryItemId, amount }) => {
@@ -128,7 +132,7 @@ export const useAdminStore = create<AdminStore>()(
               if (idx >= 0) {
                 inv[idx] = {
                   ...inv[idx],
-                  currentStock: Math.max(0, inv[idx].currentStock - amount * item.quantity),
+                  currentStock: Math.max(0, inv[idx].currentStock - amount * multiplier * item.quantity),
                 }
               }
             })
@@ -152,7 +156,7 @@ export const useAdminStore = create<AdminStore>()(
               if (idx >= 0) {
                 inv[idx] = {
                   ...inv[idx],
-                  currentStock: Math.max(0, inv[idx].currentStock - amount * item.quantity),
+                  currentStock: Math.max(0, inv[idx].currentStock - amount * multiplier * item.quantity),
                 }
               }
             })
