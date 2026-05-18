@@ -1,8 +1,9 @@
 'use client'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { AuthUser } from '../types'
-import { findCredential, roleDefaultPage } from '../mock-data/auth'
+import { AuthUser, UserRole } from '../types'
+import { findCredential, roleDefaultPage, roleAccess } from '../mock-data/auth'
+import { supabase } from '../supabase'
 
 interface AuthStore {
   user: AuthUser | null
@@ -23,19 +24,46 @@ export const useAuthStore = create<AuthStore>()(
 
       login: async (email, password) => {
         set({ isLoading: true, error: null })
-        await new Promise((r) => setTimeout(r, 800))
-        const credential = findCredential(email, password)
-        if (!credential) {
-          set({ isLoading: false, error: 'Email atau password salah.' })
-          return ''
+        await new Promise((r) => setTimeout(r, 600))
+
+        // 1. Cek mock credentials (staff lama)
+        const mockCred = findCredential(email, password)
+        if (mockCred) {
+          set({ user: mockCred.user, isLoading: false, error: null })
+          return roleDefaultPage[mockCred.user.role]
         }
-        set({ user: credential.user, isLoading: false, error: null })
-        return roleDefaultPage[credential.user.role]
+
+        // 2. Cek Supabase staff_accounts (staff baru yang ditambah via UI)
+        const { data, error } = await supabase
+          .from('staff_accounts')
+          .select('*')
+          .eq('email', email.toLowerCase().trim())
+          .eq('password', password)
+          .eq('is_active', true)
+          .maybeSingle()
+
+        if (!error && data) {
+          const role = data.role as UserRole
+          const staffUser: AuthUser = {
+            id: data.id,
+            email: data.email,
+            name: data.name,
+            role,
+            branch: data.branch || 'branch-001',
+            avatar: data.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(data.name)}&backgroundColor=6B4226&textColor=FFFAF4`,
+            allowedPages: roleAccess[role] || [],
+          }
+          set({ user: staffUser, isLoading: false, error: null })
+          return roleDefaultPage[role] || '/admin/dashboard'
+        }
+
+        set({ isLoading: false, error: 'Email atau password salah.' })
+        return ''
       },
 
       logout: () => set({ user: null, error: null }),
 
-      hasAccess: (page) => {
+      hasAccess: (page): boolean => {
         const { user } = get()
         if (!user) return false
         return user.allowedPages.includes(page)

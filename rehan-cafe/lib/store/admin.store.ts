@@ -6,6 +6,36 @@ import { mockTables } from '../mock-data/tables'
 import { mockInventory } from '../mock-data/inventory'
 import { menuItems as mockMenuItems } from '../mock-data/menu'
 import { mockSuppliers } from '../mock-data/suppliers'
+import { supabase } from '../supabase'
+
+// Convert Supabase row → InventoryItem
+const rowToInventory = (row: Record<string, unknown>): InventoryItem => ({
+  id: row.id as string,
+  name: row.name as string,
+  unit: row.unit as string,
+  currentStock: Number(row.current_stock),
+  minStock: Number(row.min_stock),
+  maxStock: Number(row.max_stock),
+  expiryDate: row.expiry_date ? new Date(row.expiry_date as string) : undefined,
+  supplierId: (row.supplier_id as string) || '',
+  supplierName: (row.supplier_name as string) || '',
+  costPerUnit: Number(row.cost_per_unit),
+  category: (row.category as InventoryItem['category']) || 'raw_material',
+})
+
+const inventoryToRow = (item: InventoryItem) => ({
+  id: item.id,
+  name: item.name,
+  unit: item.unit,
+  current_stock: item.currentStock,
+  min_stock: item.minStock,
+  max_stock: item.maxStock,
+  expiry_date: item.expiryDate ? item.expiryDate.toISOString() : null,
+  supplier_id: item.supplierId,
+  supplier_name: item.supplierName,
+  cost_per_unit: item.costPerUnit,
+  category: item.category,
+})
 
 interface AdminStore {
   orders: Order[]
@@ -45,6 +75,9 @@ interface AdminStore {
 
   addTable: (table: Omit<Table, 'id' | 'status'>) => void
   removeTable: (tableId: string) => void
+
+  loadInventoryFromSupabase: () => Promise<void>
+  seedInventoryToSupabase: () => Promise<void>
 
   syncWithMockData: () => void
 
@@ -166,15 +199,24 @@ export const useAdminStore = create<AdminStore>()(
           }
         })
         set({ inventory: inv, deductedOrderIds: [...deductedOrderIds, order.id] })
+        // Fire-and-forget: push changed items to Supabase
+        const changedItems = inv.filter((item, idx) => item.currentStock !== inventory[idx]?.currentStock)
+        changedItems.forEach((item) => {
+          void supabase.from('inventory').update({ current_stock: item.currentStock }).eq('id', item.id)
+        })
       },
 
-      addInventoryItem: (item) =>
-        set({ inventory: [...get().inventory, item] }),
+      addInventoryItem: (item) => {
+        set({ inventory: [...get().inventory, item] })
+        void supabase.from('inventory').insert(inventoryToRow(item))
+      },
 
-      updateInventoryItem: (id, updates) =>
-        set({
-          inventory: get().inventory.map((i) => (i.id === id ? { ...i, ...updates } : i)),
-        }),
+      updateInventoryItem: (id, updates) => {
+        const updated = get().inventory.map((i) => (i.id === id ? { ...i, ...updates } : i))
+        set({ inventory: updated })
+        const item = updated.find((i) => i.id === id)
+        if (item) void supabase.from('inventory').update(inventoryToRow(item)).eq('id', id)
+      },
 
       addMenuItem: (item) =>
         set({ menuItems: [...get().menuItems, item] }),
@@ -228,6 +270,21 @@ export const useAdminStore = create<AdminStore>()(
 
       removeTable: (tableId) =>
         set({ tables: get().tables.filter((t) => t.id !== tableId) }),
+
+      loadInventoryFromSupabase: async () => {
+        const { data } = await supabase.from('inventory').select('*').order('name')
+        if (data && data.length > 0) {
+          set({ inventory: data.map(rowToInventory) })
+        }
+      },
+
+      seedInventoryToSupabase: async () => {
+        const { count } = await supabase.from('inventory').select('*', { count: 'exact', head: true })
+        if (count === 0) {
+          const { inventory } = get()
+          await supabase.from('inventory').insert(inventory.map(inventoryToRow))
+        }
+      },
 
       syncWithMockData: () => {
         const { inventory, menuItems, suppliers } = get()

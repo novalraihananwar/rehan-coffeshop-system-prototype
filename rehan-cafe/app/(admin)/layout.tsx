@@ -7,7 +7,7 @@ import Sidebar from '@/components/admin/Sidebar'
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuthStore()
-  const { syncWithMockData } = useAdminStore()
+  const { syncWithMockData, seedInventoryToSupabase, loadInventoryFromSupabase } = useAdminStore()
   const router = useRouter()
   const pathname = usePathname()
   const [hydrated, setHydrated] = useState(false)
@@ -15,6 +15,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     setHydrated(true)
     syncWithMockData()
+    // Seed inventory ke Supabase (hanya jika kosong), lalu load dari Supabase
+    seedInventoryToSupabase().then(() => loadInventoryFromSupabase())
   }, [])
 
   useEffect(() => {
