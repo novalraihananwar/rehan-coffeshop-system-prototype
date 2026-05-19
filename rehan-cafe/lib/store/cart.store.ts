@@ -1,5 +1,6 @@
 'use client'
 import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
 import { CartItem, MenuItem, MenuSize, OrderType } from '../types'
 
 interface CartStore {
@@ -22,43 +23,65 @@ interface CartStore {
   estimatedTime: () => number
 }
 
-export const useCartStore = create<CartStore>((set, get) => ({
-  items: [],
-  orderType: 'dine_in',
-  tableId: '',
-  tableNumber: 0,
-  notes: '',
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      orderType: 'dine_in',
+      tableId: '',
+      tableNumber: 0,
+      notes: '',
 
-  setTable: (tableId, tableNumber) => set({ tableId, tableNumber }),
-  setOrderType: (orderType) => set({ orderType }),
-  setNotes: (notes) => set({ notes }),
+      setTable: (tableId, tableNumber) => set({ tableId, tableNumber }),
+      setOrderType: (orderType) => set({ orderType }),
+      setNotes: (notes) => set({ notes }),
 
-  addItem: (menuItem, size, quantity, notes) => {
-    const { items } = get()
-    const existing = items.find((i) => i.menuItem.id === menuItem.id && i.size === size)
-    if (existing) {
-      set({ items: items.map((i) => i.menuItem.id === menuItem.id && i.size === size ? { ...i, quantity: i.quantity + quantity } : i) })
-    } else {
-      set({ items: [...items, { menuItem, size, quantity, notes }] })
+      addItem: (menuItem, size, quantity, notes) => {
+        const { items } = get()
+        const existing = items.find((i) => i.menuItem.id === menuItem.id && i.size === size)
+        if (existing) {
+          set({ items: items.map((i) => i.menuItem.id === menuItem.id && i.size === size ? { ...i, quantity: i.quantity + quantity } : i) })
+        } else {
+          set({ items: [...items, { menuItem, size, quantity, notes }] })
+        }
+      },
+
+      removeItem: (menuItemId, size) =>
+        set({ items: get().items.filter((i) => !(i.menuItem.id === menuItemId && i.size === size)) }),
+
+      updateQuantity: (menuItemId, size, quantity) => {
+        if (quantity <= 0) {
+          get().removeItem(menuItemId, size)
+          return
+        }
+        set({ items: get().items.map((i) => i.menuItem.id === menuItemId && i.size === size ? { ...i, quantity } : i) })
+      },
+
+      clearCart: () => set({ items: [], notes: '' }),
+
+      totalItems: () => get().items.reduce((acc, i) => acc + i.quantity, 0),
+
+      totalPrice: () => get().items.reduce((acc, i) => acc + i.menuItem.prices[i.size] * i.quantity, 0),
+
+      estimatedTime: () => Math.max(...get().items.map((i) => i.menuItem.preparationTime), 0),
+    }),
+    {
+      name: 'rehan-cart',
+      storage: createJSONStorage(() => {
+        if (typeof window === 'undefined') return {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        }
+        return sessionStorage
+      }),
+      partialize: (state) => ({
+        items: state.items,
+        orderType: state.orderType,
+        tableId: state.tableId,
+        tableNumber: state.tableNumber,
+        notes: state.notes,
+      }),
     }
-  },
-
-  removeItem: (menuItemId, size) =>
-    set({ items: get().items.filter((i) => !(i.menuItem.id === menuItemId && i.size === size)) }),
-
-  updateQuantity: (menuItemId, size, quantity) => {
-    if (quantity <= 0) {
-      get().removeItem(menuItemId, size)
-      return
-    }
-    set({ items: get().items.map((i) => i.menuItem.id === menuItemId && i.size === size ? { ...i, quantity } : i) })
-  },
-
-  clearCart: () => set({ items: [], notes: '' }),
-
-  totalItems: () => get().items.reduce((acc, i) => acc + i.quantity, 0),
-
-  totalPrice: () => get().items.reduce((acc, i) => acc + i.menuItem.prices[i.size] * i.quantity, 0),
-
-  estimatedTime: () => Math.max(...get().items.map((i) => i.menuItem.preparationTime), 0),
-}))
+  )
+)

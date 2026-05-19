@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import AdminHeader from '@/components/admin/AdminHeader'
 import { useAdminStore } from '@/lib/store/admin.store'
 import { useAuthStore } from '@/lib/store/auth.store'
@@ -38,8 +38,12 @@ export default function TablesPage() {
   const [sectionFilter, setSectionFilter] = useState<string>('all')
   const [reservations, setReservations] = useState<Reservation[]>([])
   const [tab, setTab] = useState<'tables' | 'reservations'>('tables')
+  const today = new Date().toISOString().split('T')[0]
+  const dateOptions = Array.from({ length: 8 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() + i); return d.toISOString().split('T')[0]
+  })
+  const [selectedDate, setSelectedDate] = useState(today)
   const [occupiedNums, setOccupiedNums] = useState<Set<number>>(new Set())
-  const [reservedNums, setReservedNums] = useState<Map<number, Reservation>>(new Map())
 
   // Modal tambah meja
   const [showAddModal, setShowAddModal] = useState(false)
@@ -68,19 +72,12 @@ export default function TablesPage() {
     }
 
     const fetchReservations = () => {
-      const today = new Date().toISOString().split('T')[0]
-      supabase.from('reservations').select('*').gte('date', today)
+      const todayStr = new Date().toISOString().split('T')[0]
+      supabase.from('reservations').select('*').gte('date', todayStr)
         .not('status', 'eq', 'completed')
         .order('date').order('time')
         .then(({ data }) => {
-          if (data) {
-            setReservations(data as Reservation[])
-            const map = new Map<number, Reservation>()
-            ;(data as Reservation[]).filter((r) => r.status === 'confirmed').forEach((r) => {
-              if (!map.has(r.table_number)) map.set(r.table_number, r)
-            })
-            setReservedNums(map)
-          }
+          if (data) setReservations(data as Reservation[])
         })
     }
 
@@ -94,12 +91,20 @@ export default function TablesPage() {
     return () => { supabase.removeChannel(channel) }
   }, [clearTableOverride])
 
+  const reservedNums = useMemo(() => {
+    const map = new Map<number, Reservation>()
+    reservations
+      .filter((r) => r.status === 'confirmed' && r.date === selectedDate)
+      .forEach((r) => { if (!map.has(r.table_number)) map.set(r.table_number, r) })
+    return map
+  }, [reservations, selectedDate])
+
   const emptySet = new Set(tableEmptyNums)
   const cleaningSet = new Set(tableCleaningNums)
   const mergedTables = tables.map((t) => {
     if (emptySet.has(t.number)) return { ...t, status: 'empty' as TableStatus }
     if (cleaningSet.has(t.number)) return { ...t, status: 'cleaning' as TableStatus }
-    if (occupiedNums.has(t.number)) return { ...t, status: 'occupied' as TableStatus }
+    if (selectedDate === today && occupiedNums.has(t.number)) return { ...t, status: 'occupied' as TableStatus }
     if (reservedNums.has(t.number)) return { ...t, status: 'reserved' as TableStatus }
     return { ...t, status: 'empty' as TableStatus }
   }).sort((a, b) => a.number - b.number)
@@ -129,7 +134,7 @@ export default function TablesPage() {
   const handleCustomerArrived = (tableNumber: number) => {
     const rsv = reservedNums.get(tableNumber)
     setOccupiedNums((prev) => new Set([...prev, tableNumber]))
-    setReservedNums((prev) => { const m = new Map(prev); m.delete(tableNumber); return m })
+    if (rsv) setReservations((prev) => prev.map((r) => r.id === rsv.id ? { ...r, status: 'arrived' } : r))
     clearTableOverride(tableNumber)
     if (rsv) {
       supabase.from('reservations').update({ status: 'arrived' }).eq('id', rsv.id).then(() => {
@@ -208,6 +213,22 @@ export default function TablesPage() {
 
         {tab === 'tables' && (
           <div>
+            {/* Date selector */}
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-5 scrollbar-hide">
+              {dateOptions.map((dateStr, i) => {
+                const d = new Date(dateStr + 'T12:00:00')
+                const dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab']
+                const label = i === 0 ? 'Hari ini' : `${dayNames[d.getDay()]} ${d.getDate()}`
+                const rsvCount = reservations.filter((r) => r.date === dateStr && r.status === 'confirmed').length
+                return (
+                  <button key={dateStr} onClick={() => setSelectedDate(dateStr)}
+                    className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all ${selectedDate === dateStr ? 'bg-espresso-dark text-warm-white' : 'bg-warm-white border border-latte text-espresso-mid'}`}>
+                    {label}
+                    {rsvCount > 0 && <span className={`rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold ${selectedDate === dateStr ? 'bg-warm-white/20 text-warm-white' : 'bg-red-100 text-red-600'}`}>{rsvCount}</span>}
+                  </button>
+                )
+              })}
+            </div>
             {/* Legend */}
             <div className="flex flex-wrap gap-4 mb-5">
               {Object.entries(statusConfig).map(([status, cfg]) => (
@@ -308,7 +329,7 @@ export default function TablesPage() {
                         ✓ Selesai — Meja Kosong
                       </button>
                     )}
-                    {selectedTable.status === 'reserved' && (
+                    {selectedTable.status === 'reserved' && selectedDate === today && (
                       <button onClick={() => handleCustomerArrived(selectedTable.number)}
                         className="w-full bg-espresso-dark text-warm-white py-2 rounded-xl text-xs font-bold">
                         → Customer Datang (Terisi)

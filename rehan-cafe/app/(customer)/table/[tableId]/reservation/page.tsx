@@ -230,7 +230,10 @@ export default function ReservationPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold text-cafe-muted uppercase tracking-wider mb-1.5">Tanggal</p>
-                <input type="date" value={date} min={new Date().toISOString().split('T')[0]} onChange={(e) => setDate(e.target.value)}
+                <input type="date" value={date}
+                  min={new Date().toISOString().split('T')[0]}
+                  max={(() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().split('T')[0] })()}
+                  onChange={(e) => setDate(e.target.value)}
                   className="w-full text-sm text-espresso-deep border-b border-latte pb-1.5 focus:outline-none" />
               </div>
               <div>
